@@ -41,7 +41,11 @@ namespace HogentVmPortal.Controllers
         // GET: VirtualMachine
         public async Task<IActionResult> Index()
         {
+            var currentUserId = User.GetId();
+
             var virtualMachines = await _vmRepository.GetAll(includeUsers: true);
+            virtualMachines = virtualMachines.Where(v => v.Owner.Id == currentUserId).ToList();
+
             return View(VirtualMachineListItem.ToViewModel(virtualMachines));
         }
 

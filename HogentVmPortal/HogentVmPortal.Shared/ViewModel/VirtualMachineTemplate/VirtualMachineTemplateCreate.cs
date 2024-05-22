@@ -21,6 +21,7 @@ namespace HogentVmPortal.Shared.ViewModel
 
         public string? Description { get; set; }
 
+        [Required]
         public Guid? CourseId { get; set; }
     }
 }

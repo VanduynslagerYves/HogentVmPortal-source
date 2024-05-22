@@ -41,7 +41,11 @@ namespace HogentVmPortal.Controllers
         // GET: Container
         public async Task<IActionResult> Index()
         {
+            var currentUserId = User.GetId();
+
             var containers = await _containerRepository.GetAll(includeUsers: true);
+            containers = containers.Where(v => v.Owner.Id == currentUserId).ToList();
+
             return View(ContainerListItem.ToViewModel(containers));
         }
 
@@ -124,40 +128,6 @@ namespace HogentVmPortal.Controllers
 
             return View(containerEdit);
         }
-
-        // POST: Container/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,NewPassword")] ContainerEdit containerEdit)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        try
-        //        {
-        //            var editRequest = new ContainerEditRequest
-        //            {
-        //                Id = Guid.NewGuid(),
-        //                TimeStamp = DateTime.Now,
-        //                VmId = id,
-        //            };
-
-        //            await _containerRequestRepository.Add(editRequest);
-        //            await _containerRequestRepository.SaveChangesAsync();
-
-        //            TempData["Message"] = string.Format("Wachtwoordreset voor container {0} is in behandeling", containerEdit.Name);
-        //            return RedirectToAction(nameof(Index));
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            TempData["Error"] = ex.Message;
-        //            return View(containerEdit);
-        //        }
-        //    }
-
-        //    return View(containerEdit);
-        //}
 
         // GET: Container/Delete/5
         public async Task<IActionResult> Delete(Guid id)
