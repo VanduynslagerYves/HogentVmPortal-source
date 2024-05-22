@@ -1,0 +1,68 @@
+﻿@model IEnumerable<HogentVmPortal.Shared.ViewModel.VirtualMachineListItem>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Virtual machines</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+@if (!Model.Any())
+{
+    <p>No virtual machines found...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ProxmoxId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IpAddress)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Login)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.OwnerEmail)
+                </th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ProxmoxId)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.IpAddress)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Login)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.OwnerEmail)
+                    </td>
+                    <td>
+                        @* <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> | *@
+                        @* <a asp-action="Details" asp-route-id="@item.Id">Details</a> | *@
+                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> |
+                        <a asp-action="Start" asp-route-id="@item.ProxmoxId">Start Virtual Machine</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

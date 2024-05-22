@@ -1,0 +1,203 @@
+﻿using HogentVmPortal.Shared.Model;
+using Pulumi.Automation; //automation API
+using VirtualMachineWorker.PulumiStrategy;
+
+namespace VirtualMachineWorker
+{
+    public partial class Worker
+    {
+        //https://www.pulumi.com/docs/using-pulumi/automation-api/getting-started-automation-api/
+        private async Task HandleVirtualMachineCreateRequests()
+        {
+            //_logger.LogInformation("Checking for create vm requests at: {time}", DateTimeOffset.Now);
+
+            var createRequests = await _virtualMachineRequestRepository.GetAllCreateRequests();
+            createRequests = createRequests.OrderBy(x => x.TimeStamp).ToList();
+            if (!createRequests.Any())
+            {
+                //_logger.LogInformation("No create vm requests at this moment: {time}", DateTimeOffset.Now);
+                return;
+            }
+
+            //_logger.LogInformation("Start processing of " + createRequests.Count + " create vm request(s) at: {time}", DateTimeOffset.Now);
+            ProviderStrategy? pulumiProvider;
+            foreach (var createRequest in createRequests)
+            {
+                try
+                {
+                    var owner = await _appUserRepository.GetById(createRequest.OwnerId);
+                    var template = await _virtualMachineTemplateRepository.GetByCloneId(createRequest.CloneId);
+
+                    var virtualMachine = new VirtualMachine
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = createRequest.Name,
+                        Owner = owner,
+                        Template = template,
+                    };
+
+                    var vmArgs = new ProxmoxVirtualMachineCreateParams()
+                    {
+                        Login = createRequest.Login,
+                        Password = createRequest.Password,
+                        VmName = createRequest.Name,
+                        CloneId = createRequest.CloneId,
+                        SshKey = createRequest.SshKey,
+                    };
+
+                    pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
+
+                    var projectName = "pulumi_inline";
+                    var stackName = vmArgs.VmName;
+
+                    var virtualMachineDefinition = pulumiProvider.CreateVirtualMachine(vmArgs);
+                    var stackArgs = new InlineProgramArgs(projectName, stackName, virtualMachineDefinition);
+                    var stack = await LocalWorkspace.CreateOrSelectStackAsync(stackArgs);
+
+                    //var result = await Task.Run(() => stack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine, ShowSecrets = true }));
+                    //Provision the virtual machine
+                    var result = await stack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine, ShowSecrets = true });
+
+                    //Add extra data to the virtual machine object once it is provisioned.
+                    if (result.Outputs.TryGetValue("ip", out var ip)) virtualMachine.IpAddress = ip.Value.ToString();
+                    if (result.Outputs.TryGetValue("id", out var proxmoxId)) virtualMachine.ProxmoxId = int.Parse(proxmoxId.Value.ToString()!);
+                    if (result.Outputs.TryGetValue("login", out var login)) virtualMachine.Login = login.Value.ToString();
+
+                    await _virtualMachineRepository.Add(virtualMachine);
+                    await _virtualMachineRepository.SaveChangesAsync();
+
+                    _virtualMachineRequestRepository.Delete(createRequest);
+                    await _virtualMachineRequestRepository.SaveChangesAsync();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    //_logger.LogInformation("Error while processing create vm request for " + createRequest.Name + " at: {time}", DateTimeOffset.Now);
+
+                    //Delete the request
+                    //_logger.LogInformation("Deleting create vm request for " + createRequest.Name + " from database");
+                    _virtualMachineRequestRepository.Delete(createRequest);
+                    await _virtualMachineRequestRepository.SaveChangesAsync();
+                }
+            }
+            //_logger.LogInformation("Finished processing of " + createRequests.Count + " create vm request(s) at: {time}", DateTimeOffset.Now);
+        }
+
+        //private async Task HandleVirtualMachineEditRequests()
+        //{
+        //    var editRequests = await _virtualMachineRequestRepository.GetAllEditRequests();
+        //    editRequests = editRequests.OrderBy(x => x.TimeStamp).ToList();
+
+        //    ProviderStrategy? pulumiProvider;
+
+        //    if (!editRequests.Any()) return;
+
+        //    foreach (var editRequest in editRequests)
+        //    {
+        //        try
+        //        {
+        //            var virtualMachine = await _virtualMachineRepository.GetById(editRequest.VmId);
+
+        //            //TODO: build these with builder or factory, based on selected type in the VirtualMachineCreate viewmodel
+        //            var vmArgs = new ProxmoxVirtualMachineEditParams()
+        //            {
+        //                VmName = virtualMachine.Name,
+        //                Login = virtualMachine.Login!,
+        //                //Password = editRequest.Password,
+        //                CloneId = virtualMachine.Template!.ProxmoxId,
+        //                //SshKey = editRequest.SshKey,
+        //            };
+
+        //            //TODO: build these with builder or factory, based on selected type in the VirtualMachineCreate viewmodel
+        //            pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
+
+        //            var projectName = "pulumi_inline";
+        //            var stackName = vmArgs.VmName;
+        //            var pulumiVm = pulumiProvider.EditVirtualMachine(vmArgs);
+
+        //            var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiVm);
+        //            var stack = await LocalWorkspace.SelectStackAsync(stackArgs);
+
+        //            var result = await stack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine, ShowSecrets = true });
+
+        //            //Changing the stack might change the original ip, save it again.
+        //            if (result.Outputs.TryGetValue("ip", out var ip)) virtualMachine.IpAddress = ip.Value.ToString();
+        //            //if (result.Outputs.TryGetValue("login", out var login)) virtualMachine.Login = login.Value.ToString();
+
+        //            _virtualMachineRepository.Update(virtualMachine);
+        //            await _virtualMachineRepository.SaveChangesAsync();
+
+        //            _virtualMachineRequestRepository.Delete(editRequest);
+        //            await _virtualMachineRequestRepository.SaveChangesAsync();
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            Console.WriteLine(e.Message);
+
+        //            //Delete the request
+        //            _virtualMachineRequestRepository.Delete(editRequest);
+        //            await _virtualMachineRequestRepository.SaveChangesAsync();
+        //        }
+        //    }
+        //}
+
+        private async Task HandleVirtualMachineRemoveRequests()
+        {
+            //_logger.LogInformation("Checking for remove vm requests at: {time}", DateTimeOffset.Now);
+
+            var removeRequests = await _virtualMachineRequestRepository.GetAllRemoveRequests();
+            removeRequests = removeRequests.OrderBy(x => x.TimeStamp).ToList();
+            if (!removeRequests.Any())
+            {
+                //_logger.LogInformation("No remove vm requests at this moment: {time}", DateTimeOffset.Now);
+                return;
+            }
+
+            //_logger.LogInformation("Start processing of " + removeRequests.Count + " remove vm request(s) at: {time}", DateTimeOffset.Now);
+            ProviderStrategy? pulumiProvider;
+
+            foreach (var removeRequest in removeRequests)
+            {
+                try
+                {
+                    //TODO: build these with builder or factory, based on selected type in the VirtualMachineCreate viewmodel
+                    var vmArgs = new ProxmoxVirtualMachineDeleteParams()
+                    {
+                        //TargetNodeName = "proxmoxpve", //get from proxmoxConfig
+                        VmName = removeRequest.Name,
+                    };
+
+                    //TODO: build these with builder or factory, based on selected type in the VirtualMachineCreate viewmodel
+                    pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
+
+                    var projectName = "pulumi_inline";
+                    var stackName = vmArgs.VmName;
+
+                    var pulumiVm = pulumiProvider.RemoveVirtualMachine(vmArgs); //rename var naar pulumiFn, functie CreateVirtualMachineRemoveFn()
+                    var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiVm);
+                    var stack = await LocalWorkspace.SelectStackAsync(stackArgs);
+
+                    await stack.DestroyAsync(new DestroyOptions { OnStandardOutput = Console.WriteLine }); //destroying the stack only removes the resources in the stack
+                    await stack.Workspace.RemoveStackAsync(removeRequest.Name); //use workspace property to remove the now empty stack
+
+                    await _virtualMachineRepository.Delete(removeRequest.VmId);
+                    await _virtualMachineRepository.SaveChangesAsync();
+
+                    _virtualMachineRequestRepository.Delete(removeRequest);
+                    await _virtualMachineRequestRepository.SaveChangesAsync();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    //_logger.LogInformation("Error while processing remove vm request for " + removeRequest.Name + " at: {time}", DateTimeOffset.Now);
+
+                    //Delete the request
+                    //_logger.LogInformation("Deleting remove vm request for " + removeRequest.Name + " from database");
+                    _virtualMachineRequestRepository.Delete(removeRequest);
+                    await _virtualMachineRequestRepository.SaveChangesAsync();
+                }
+            }
+            //_logger.LogInformation("Finished processing of " + removeRequests.Count + " remove vm request(s) at: {time}", DateTimeOffset.Now);
+        }
+    }
+}

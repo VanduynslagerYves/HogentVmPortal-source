@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="HogentVmPortal.Shared.Model.VirtualMachine">
+    <Position X="5.5" Y="2.5" Width="1.5" />
+    <AssociationLine Name="Owner" Type="HogentVmPortal.Shared.Model.HogentUser" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="6.438" Y="2.5" />
+        <Point X="6.438" Y="0.562" />
+        <Point X="3" Y="0.562" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.175" Y="-0.223" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="Template" Type="HogentVmPortal.Shared.Model.VirtualMachineTemplate">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.88" Y="0.133" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAACAACAAEAAEAAAAACAAAQAAAAAAAAAAAAQAAAAAAA=</HashCode>
+      <FileName>Model\VirtualMachine.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Owner" />
+      <Property Name="Template" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="HogentVmPortal.Shared.Model.HogentUser">
+    <Position X="1.5" Y="0.5" Width="1.5" />
+    <AssociationLine Name="VirtualMachines" Type="HogentVmPortal.Shared.Model.VirtualMachine" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="3" Y="1" />
+        <Point X="5.812" Y="1" />
+        <Point X="5.812" Y="2.5" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.079" Y="0.216" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="Containers" Type="HogentVmPortal.Shared.Model.Container" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="2" Y="1.497" />
+        <Point X="2" Y="1.606" />
+        <Point X="2" Y="1.606" />
+        <Point X="2" Y="2.5" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.036" Y="0.279" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="Courses" Type="HogentVmPortal.Shared.Model.Course" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="1.5" Y="0.625" />
+        <Point X="0.51" Y="0.625" />
+        <Point X="0.51" Y="9.398" />
+        <Point X="1.75" Y="9.398" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAgAABAAAAA=</HashCode>
+      <FileName>Model\HogentUser.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="VirtualMachines" />
+      <Property Name="Containers" />
+      <Property Name="Courses" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="HogentVmPortal.Shared.Model.VirtualMachineTemplate">
+    <Position X="5.5" Y="5.75" Width="2" />
+    <AssociationLine Name="VirtualMachines" Type="HogentVmPortal.Shared.Model.VirtualMachine" FixedToPoint="true">
+      <Path>
+        <Point X="5.75" Y="5.75" />
+        <Point X="5.75" Y="4.373" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="Courses" Type="HogentVmPortal.Shared.Model.Course">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.102" Y="-0.317" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAgEAAAAAAAAAQAAAAIEAAAAAAAABAAAAA=</HashCode>
+      <FileName>Model\VirtualMachineTemplate.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="VirtualMachines" />
+      <Property Name="Courses" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="HogentVmPortal.Shared.Model.Course">
+    <Position X="1.75" Y="8.75" Width="1.5" />
+    <AssociationLine Name="Students" Type="HogentVmPortal.Shared.Model.HogentUser" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="1.75" Y="9.043" />
+        <Point X="1.125" Y="9.043" />
+        <Point X="1.125" Y="1.062" />
+        <Point X="1.5" Y="1.062" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.006" Y="0.07" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="VirtualMachineTemplates" Type="HogentVmPortal.Shared.Model.VirtualMachineTemplate">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.067" Y="0.091" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="ContainerTemplates" Type="HogentVmPortal.Shared.Model.ContainerTemplate">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.473" Y="0.029" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAYCAAAAAAAAAAAAAAAAAAQAAAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Course.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Students" />
+      <Property Name="VirtualMachineTemplates" />
+      <Property Name="ContainerTemplates" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="HogentVmPortal.Shared.Model.Container">
+    <Position X="1.75" Y="2.5" Width="1.5" />
+    <AssociationLine Name="Owner" Type="HogentVmPortal.Shared.Model.HogentUser" FixedFromPoint="true">
+      <Path>
+        <Point X="2.625" Y="2.5" />
+        <Point X="2.625" Y="1.497" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.703" Y="0.112" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="Template" Type="HogentVmPortal.Shared.Model.ContainerTemplate" FixedToPoint="true">
+      <Path>
+        <Point X="2.938" Y="4.18" />
+        <Point X="2.938" Y="5.75" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.825" Y="0.152" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAACAACAAEAAEAAAAACAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Container.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Owner" />
+      <Property Name="Template" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="HogentVmPortal.Shared.Model.ContainerTemplate">
+    <Position X="1.75" Y="5.75" Width="1.75" />
+    <AssociationLine Name="Containers" Type="HogentVmPortal.Shared.Model.Container" FixedFromPoint="true">
+      <Path>
+        <Point X="2" Y="5.75" />
+        <Point X="2" Y="4.18" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="Courses" Type="HogentVmPortal.Shared.Model.Course" FixedToPoint="true">
+      <Path>
+        <Point X="2" Y="7.43" />
+        <Point X="2" Y="8.75" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAgEAAAAAAAAAQAAAAAAAAAAAgAABAAAAA=</HashCode>
+      <FileName>Model\ContainerTemplate.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Containers" />
+      <Property Name="Courses" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
