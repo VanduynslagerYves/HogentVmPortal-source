@@ -6,7 +6,6 @@ namespace HogentVmPortal.Data.Repositories
     {
         Task Add(VirtualMachineCreateRequest request);
         Task Add(VirtualMachineRemoveRequest request);
-        //Task Add(VirtualMachineEditRequest request);
         Task SaveChangesAsync();
     }
 }

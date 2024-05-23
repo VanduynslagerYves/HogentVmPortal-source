@@ -1,5 +1,5 @@
 ﻿using HogentVmPortal.Shared.Model;
-using Pulumi.Automation; //automation API
+using Pulumi.Automation;
 using Renci.SshNet;
 using System.Text.RegularExpressions;
 using VirtualMachineWorker.PulumiStrategy;
@@ -200,13 +200,10 @@ namespace VirtualMachineWorker
                     while (string.IsNullOrEmpty(ip) && retryCount < 5)
                     {
                         //outputs the ip address of the container and writes to filename specified in IPLOGFILENAME
-                        //client.RunCommand("lxc-info -i -n " + id + " > " + IPLOGFILENAME);
                         await RunCommandAsync(client, "lxc-info -i -n " + id + " > " + IPLOGFILENAME);
-                        //var result = client.RunCommand("cat " + IPLOGFILENAME);
-                        var result = await RunCommandAsync(client, "cat " + IPLOGFILENAME);
-                        //ip = result.Result;
 
-                        //var match = _ipRegex.Match(ip);
+                        var result = await RunCommandAsync(client, "cat " + IPLOGFILENAME);
+
                         var match = _ipRegex.Match(result);
                         if (match.Success)
                         {

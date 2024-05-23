@@ -8,7 +8,6 @@ namespace VirtualMachineWorker.Data.Repositories
     {
         private readonly ApplicationDbContext _context;
         private readonly DbSet<ContainerCreateRequest> _createRequests;
-        //private readonly DbSet<ContainerEditRequest> _editRequests;
         private readonly DbSet<ContainerRemoveRequest> _removeRequests;
 
         public ContainerRequestRepository(ApplicationDbContext context)
@@ -16,18 +15,12 @@ namespace VirtualMachineWorker.Data.Repositories
             _context = context;
 
             _createRequests = _context.ContainerCreateRequests;
-            //_editRequests = _context.ContainerEditRequests;
             _removeRequests = _context.ContainerRemoveRequests;
         }
         public void Delete(ContainerCreateRequest request)
         {
             _createRequests.Remove(request);
         }
-
-        //public void Delete(ContainerEditRequest request)
-        //{
-        //    _editRequests.Remove(request);
-        //}
 
         public void Delete(ContainerRemoveRequest request)
         {
@@ -38,11 +31,6 @@ namespace VirtualMachineWorker.Data.Repositories
         {
             return await _createRequests.ToListAsync();
         }
-
-        //public async Task<List<ContainerEditRequest>> GetAllEditRequests()
-        //{
-        //    return await _editRequests.ToListAsync();
-        //}
 
         public async Task<List<ContainerRemoveRequest>> GetAllRemoveRequests()
         {

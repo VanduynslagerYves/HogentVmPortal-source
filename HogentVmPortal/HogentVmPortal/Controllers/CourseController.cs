@@ -78,54 +78,6 @@ namespace HogentVmPortal.Controllers
             return View(courseViewModel);
         }
 
-        // GET: CourseController/Edit/5
-        public async Task<ActionResult> Edit(Guid id)
-        {
-            CourseEdit? courseEdit;
-            try
-            {
-                var course = await _courseRepository.GetById(id);
-                ViewData["Name"] = course.Name;
-                courseEdit = CourseEdit.ToViewModel(course);
-            }
-            catch (CourseNotFoundException e)
-            {
-                TempData["Error"] = e.Message;
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(courseEdit);
-        }
-
-        // POST: CourseController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id, Name")] CourseEdit courseEdit)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var course = await _courseRepository.GetById(id);
-
-                    course.Name = courseEdit.Name;
-
-                    _courseRepository.Update(course);
-                    await _courseRepository.SaveChangesAsync();
-
-                    TempData["Message"] = "Course has been modified.";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    TempData["Error"] = ex.Message;
-                    return View(courseEdit);
-                }
-            }
-
-            return View(courseEdit);
-        }
-
         // GET: CourseController/Delete/5
         public async Task<ActionResult> Delete(Guid id)
         {

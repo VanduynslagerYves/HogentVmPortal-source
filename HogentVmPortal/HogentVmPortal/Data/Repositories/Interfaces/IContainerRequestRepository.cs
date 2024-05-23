@@ -6,8 +6,6 @@ namespace HogentVmPortal.Data.Repositories
     {
         Task Add(ContainerCreateRequest request);
         Task Add(ContainerRemoveRequest request);
-        //Task Add(ContainerEditRequest request);
-
         Task SaveChangesAsync();
     }
 }

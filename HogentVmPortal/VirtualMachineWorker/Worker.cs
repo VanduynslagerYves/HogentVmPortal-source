@@ -56,11 +56,9 @@ namespace VirtualMachineWorker
 
                 await HandleVirtualMachineRemoveRequests();
                 await HandleVirtualMachineCreateRequests();
-                //await HandleVirtualMachineEditRequests();
 
                 await HandleContainerRemoveRequests();
                 await HandleContainerCreateRequests();
-                //await HandleContainerEditRequests();
 
                 await Task.Delay(5000, stoppingToken);
             }

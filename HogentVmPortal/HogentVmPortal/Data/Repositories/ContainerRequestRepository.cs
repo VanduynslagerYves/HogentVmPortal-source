@@ -10,7 +10,6 @@ namespace HogentVmPortal.Data.Repositories
 
         private readonly DbSet<ContainerCreateRequest> _createRequests;
         private readonly DbSet<ContainerRemoveRequest> _removeRequests;
-        //private readonly DbSet<ContainerEditRequest> _editRequests;
 
         public ContainerRequestRepository(ApplicationDbContext context)
         {
@@ -18,7 +17,6 @@ namespace HogentVmPortal.Data.Repositories
 
             _createRequests = _context.ContainerCreateRequests;
             _removeRequests = _context.ContainerRemoveRequests;
-            //_editRequests = _context.ContainerEditRequests;
         }
 
         public async Task Add(ContainerCreateRequest request)
@@ -30,11 +28,6 @@ namespace HogentVmPortal.Data.Repositories
         {
             await _removeRequests.AddAsync(request);
         }
-
-        //public async Task Add(ContainerEditRequest request)
-        //{
-        //    await _editRequests.AddAsync(request);
-        //}
 
         public async Task SaveChangesAsync()
         {

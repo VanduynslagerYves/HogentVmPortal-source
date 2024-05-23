@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace HogentVmPortal.Shared.Data;
 
+//https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/projects?tabs=dotnet-core-cli
+//https://stackoverflow.com/questions/60442788/what-is-the-proper-way-to-reuse-dbcontext-across-different-projects-in-a-single
+//https://stackoverflow.com/questions/38705694/add-migration-with-different-assembly
+
 //DbContext is placed in HogentVmPortal.Shared, both the webapp and the workers need to access this mapping
 public class ApplicationDbContext : IdentityDbContext<HogentUser>
 {
@@ -24,11 +28,9 @@ public class ApplicationDbContext : IdentityDbContext<HogentUser>
 
     public DbSet<VirtualMachineCreateRequest> VirtualMachineCreateRequests { get; set; }
     public DbSet<VirtualMachineRemoveRequest> VirtualMachineRemoveRequests { get; set; }
-    //public DbSet<VirtualMachineEditRequest> VirtualMachineEditRequests { get; set; }
 
     public DbSet<ContainerCreateRequest> ContainerCreateRequests { get; set; }
     public DbSet<ContainerRemoveRequest> ContainerRemoveRequests { get; set; }
-    //public DbSet<ContainerEditRequest> ContainerEditRequests { get; set; }
 
     //Most of these mappings are handled implicitely and are not needed
     protected override void OnModelCreating(ModelBuilder builder)
@@ -45,11 +47,9 @@ public class ApplicationDbContext : IdentityDbContext<HogentUser>
 
         builder.Entity<VirtualMachineCreateRequest>(MapVmCreateRequest);
         builder.Entity<VirtualMachineRemoveRequest>(MapVmRemoveRequest);
-        //builder.Entity<VirtualMachineEditRequest>(MapVmEditRequest);
 
         builder.Entity<ContainerCreateRequest>(MapContainerCreateRequest);
         builder.Entity<ContainerRemoveRequest>(MapContainerRemoveRequest);
-        //builder.Entity<ContainerEditRequest>(MapContainerEditRequest);
     }
 
     public static void MapVirtualMachine(EntityTypeBuilder<VirtualMachine> vmBuilder)
@@ -117,7 +117,6 @@ public class ApplicationDbContext : IdentityDbContext<HogentUser>
         userBuilder.ToTable("HogentUser");
         userBuilder.HasKey(x => x.Id);
 
-        //Not needed, is mapped by convention
         userBuilder.HasMany(x => x.VirtualMachines).WithOne(x => x.Owner);
         userBuilder.HasMany(x => x.Containers).WithOne(x => x.Owner);
         userBuilder.HasMany(x => x.Courses).WithMany(x => x.Students);
@@ -161,16 +160,6 @@ public class ApplicationDbContext : IdentityDbContext<HogentUser>
         vmRemoveBuilder.Property(x => x.TimeStamp).IsRequired();
     }
 
-    //public static void MapVmEditRequest(EntityTypeBuilder<VirtualMachineEditRequest> vmEditBuilder)
-    //{
-    //    vmEditBuilder.ToTable("VirtualMachineEditRequest");
-
-    //    vmEditBuilder.HasKey(x => x.Id);
-
-    //    vmEditBuilder.Property(x => x.TimeStamp).IsRequired();
-    //    vmEditBuilder.Property(x => x.VmId).IsRequired();
-    //}
-
     public static void MapContainerCreateRequest(EntityTypeBuilder<ContainerCreateRequest> containerCreateBuilder)
     {
         containerCreateBuilder.ToTable("ContainerCreateRequest");
@@ -193,20 +182,4 @@ public class ApplicationDbContext : IdentityDbContext<HogentUser>
         containerRemoveBuilder.Property(x => x.Name).IsRequired();
         containerRemoveBuilder.Property(x => x.TimeStamp).IsRequired();
     }
-
-    //public static void MapContainerEditRequest(EntityTypeBuilder<ContainerEditRequest> containerEditBuilder)
-    //{
-    //    containerEditBuilder.ToTable("ContainerEditRequest");
-
-    //    containerEditBuilder.HasKey(x => x.Id);
-
-    //    containerEditBuilder.Property(x => x.TimeStamp).IsRequired();
-    //    containerEditBuilder.Property(x => x.Password).IsRequired();
-    //    containerEditBuilder.Property(x => x.VmId).IsRequired();
-    //    containerEditBuilder.Property(x => x.SshKey).IsRequired();
-    //}
 }
-
-//https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/projects?tabs=dotnet-core-cli
-//https://stackoverflow.com/questions/60442788/what-is-the-proper-way-to-reuse-dbcontext-across-different-projects-in-a-single
-//https://stackoverflow.com/questions/38705694/add-migration-with-different-assembly

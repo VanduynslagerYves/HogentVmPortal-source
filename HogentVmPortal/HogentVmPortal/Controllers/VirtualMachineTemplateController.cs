@@ -81,59 +81,6 @@ namespace HogentVmPortal.Controllers
             return View(templateViewModel);
         }
 
-        // GET: VirtualMachineTemplate/Edit/5
-        public async Task<IActionResult> Edit(Guid id)
-        {
-            VirtualMachineTemplateEdit? templateEdit;
-            try
-            {
-                var template = await _templateRepository.GetById(id);
-                ViewData["Name"] = template.Name;
-                templateEdit = VirtualMachineTemplateEdit.ToViewModel(template);
-            }
-            catch (VirtualMachineTemplateNotFoundException e)
-            {
-                TempData["Error"] = e.Message;
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(templateEdit);
-        }
-
-        // POST: VirtualMachineTemplate/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,ProxmoxId,Name,OperatingSystem,Description")] VirtualMachineTemplateEdit templateEdit)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var template = await _templateRepository.GetById(id);
-
-                    template.ProxmoxId = templateEdit.ProxmoxId;
-                    template.Name = templateEdit.Name;
-                    template.OperatingSystem = templateEdit.OperatingSystem;
-                    template.Description = templateEdit.Description;
-
-                    _templateRepository.Update(template);
-                    await _templateRepository.SaveChangesAsync();
-
-                    TempData["Message"] = "Template has been modified";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch(Exception ex)
-                {
-                    TempData["Error"] = ex.Message;
-                    return View(templateEdit);
-                }
-            }
-            
-            return View(templateEdit);
-        }
-
         // GET: VirtualMachineTemplate/Delete/5
         public async Task<IActionResult> Delete(Guid id)
         {

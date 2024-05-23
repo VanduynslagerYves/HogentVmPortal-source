@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HogentVmPortal.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240511082947_RemoveEdit")]
-    partial class RemoveEdit
+    [Migration("20240523134520_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

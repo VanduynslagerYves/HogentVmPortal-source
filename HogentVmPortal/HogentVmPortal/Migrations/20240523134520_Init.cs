@@ -26,6 +26,49 @@ namespace HogentVmPortal.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ContainerCreateRequest",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OwnerId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CloneId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContainerCreateRequest", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ContainerRemoveRequest",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    VmId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContainerRemoveRequest", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ContainerTemplate",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProxmoxId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContainerTemplate", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Course",
                 columns: table => new
                 {
@@ -63,21 +106,6 @@ namespace HogentVmPortal.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Template",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProxmoxId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    OperatingSystem = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Template", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "VirtualMachineCreateRequest",
                 columns: table => new
                 {
@@ -96,20 +124,6 @@ namespace HogentVmPortal.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "VirtualMachineEditRequest",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    VmId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_VirtualMachineEditRequest", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "VirtualMachineRemoveRequest",
                 columns: table => new
                 {
@@ -121,6 +135,21 @@ namespace HogentVmPortal.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_VirtualMachineRemoveRequest", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VirtualMachineTemplate",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProxmoxId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    OperatingSystem = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VirtualMachineTemplate", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -140,6 +169,30 @@ namespace HogentVmPortal.Migrations
                         name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ContainerTemplateCourse",
+                columns: table => new
+                {
+                    ContainerTemplatesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CoursesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContainerTemplateCourse", x => new { x.ContainerTemplatesId, x.CoursesId });
+                    table.ForeignKey(
+                        name: "FK_ContainerTemplateCourse_ContainerTemplate_ContainerTemplatesId",
+                        column: x => x.ContainerTemplatesId,
+                        principalTable: "ContainerTemplate",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ContainerTemplateCourse_Course_CoursesId",
+                        column: x => x.CoursesId,
+                        principalTable: "Course",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -230,6 +283,34 @@ namespace HogentVmPortal.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Container",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProxmoxId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    IpAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TemplateId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Container", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Container_ContainerTemplate_TemplateId",
+                        column: x => x.TemplateId,
+                        principalTable: "ContainerTemplate",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Container_HogentUser_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "HogentUser",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CourseHogentUser",
                 columns: table => new
                 {
@@ -254,25 +335,25 @@ namespace HogentVmPortal.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CourseTemplate",
+                name: "CourseVirtualMachineTemplate",
                 columns: table => new
                 {
                     CoursesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TemplatesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    VirtualMachineTemplatesId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CourseTemplate", x => new { x.CoursesId, x.TemplatesId });
+                    table.PrimaryKey("PK_CourseVirtualMachineTemplate", x => new { x.CoursesId, x.VirtualMachineTemplatesId });
                     table.ForeignKey(
-                        name: "FK_CourseTemplate_Course_CoursesId",
+                        name: "FK_CourseVirtualMachineTemplate_Course_CoursesId",
                         column: x => x.CoursesId,
                         principalTable: "Course",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CourseTemplate_Template_TemplatesId",
-                        column: x => x.TemplatesId,
-                        principalTable: "Template",
+                        name: "FK_CourseVirtualMachineTemplate_VirtualMachineTemplate_VirtualMachineTemplatesId",
+                        column: x => x.VirtualMachineTemplatesId,
+                        principalTable: "VirtualMachineTemplate",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -299,9 +380,9 @@ namespace HogentVmPortal.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_VirtualMachine_Template_TemplateId",
+                        name: "FK_VirtualMachine_VirtualMachineTemplate_TemplateId",
                         column: x => x.TemplateId,
-                        principalTable: "Template",
+                        principalTable: "VirtualMachineTemplate",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -334,14 +415,39 @@ namespace HogentVmPortal.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Container_OwnerId",
+                table: "Container",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Container_TemplateId",
+                table: "Container",
+                column: "TemplateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Name",
+                table: "Container",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Name",
+                table: "ContainerTemplate",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ContainerTemplateCourse_CoursesId",
+                table: "ContainerTemplateCourse",
+                column: "CoursesId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CourseHogentUser_StudentsId",
                 table: "CourseHogentUser",
                 column: "StudentsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CourseTemplate_TemplatesId",
-                table: "CourseTemplate",
-                column: "TemplatesId");
+                name: "IX_CourseVirtualMachineTemplate_VirtualMachineTemplatesId",
+                table: "CourseVirtualMachineTemplate",
+                column: "VirtualMachineTemplatesId");
 
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
@@ -357,11 +463,6 @@ namespace HogentVmPortal.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Name",
-                table: "Template",
-                column: "Name");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Name",
                 table: "VirtualMachine",
                 column: "Name");
 
@@ -374,6 +475,11 @@ namespace HogentVmPortal.Migrations
                 name: "IX_VirtualMachine_TemplateId",
                 table: "VirtualMachine",
                 column: "TemplateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Name",
+                table: "VirtualMachineTemplate",
+                column: "Name");
         }
 
         /// <inheritdoc />
@@ -395,10 +501,22 @@ namespace HogentVmPortal.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Container");
+
+            migrationBuilder.DropTable(
+                name: "ContainerCreateRequest");
+
+            migrationBuilder.DropTable(
+                name: "ContainerRemoveRequest");
+
+            migrationBuilder.DropTable(
+                name: "ContainerTemplateCourse");
+
+            migrationBuilder.DropTable(
                 name: "CourseHogentUser");
 
             migrationBuilder.DropTable(
-                name: "CourseTemplate");
+                name: "CourseVirtualMachineTemplate");
 
             migrationBuilder.DropTable(
                 name: "VirtualMachine");
@@ -407,13 +525,13 @@ namespace HogentVmPortal.Migrations
                 name: "VirtualMachineCreateRequest");
 
             migrationBuilder.DropTable(
-                name: "VirtualMachineEditRequest");
-
-            migrationBuilder.DropTable(
                 name: "VirtualMachineRemoveRequest");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "ContainerTemplate");
 
             migrationBuilder.DropTable(
                 name: "Course");
@@ -422,7 +540,7 @@ namespace HogentVmPortal.Migrations
                 name: "HogentUser");
 
             migrationBuilder.DropTable(
-                name: "Template");
+                name: "VirtualMachineTemplate");
         }
     }
 }

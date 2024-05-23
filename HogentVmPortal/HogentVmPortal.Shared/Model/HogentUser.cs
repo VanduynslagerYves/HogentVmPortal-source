@@ -2,6 +2,7 @@
 
 namespace HogentVmPortal.Shared.Model
 {
+    //Derives from the .NET IdentityUser class, so we can extend this with our own navigation properties
     public class HogentUser : IdentityUser
     {
         public List<VirtualMachine> VirtualMachines { get; } = new List<VirtualMachine>();

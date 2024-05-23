@@ -62,7 +62,7 @@ namespace VirtualMachineWorker.PulumiStrategy
                     {
                         Type = "l26",
                     },
-                    SerialDevices = new VirtualMachineSerialDeviceArgs[] { }, //belangrijk als instelling voor console in proxmox, console start anders standaard mbv serial port
+                    SerialDevices = new VirtualMachineSerialDeviceArgs[] { }, //important as setting for console in proxmox, if not set the vm connections is setup with a serial port resulting in a blank screen.
                     NetworkDevices = new VirtualMachineNetworkDeviceArgs
                     {
                         Bridge = "vmbr0",
@@ -85,12 +85,10 @@ namespace VirtualMachineWorker.PulumiStrategy
                                 Gateway = "192.168.152.2"
                             },
                         },
-                        //UserDataFileId = "local:snippets/100.yaml",
-                        UserAccount = new VirtualMachineInitializationUserAccountArgs //apt-get install cloud-init moet geïnstalleerd worden op de host, dnf install voor fedora
+                        UserAccount = new VirtualMachineInitializationUserAccountArgs //cloud-init must be installed on a linux host
                         {
                             Username = createArgs.Login,
                             Password = createArgs.Password,
-                            //Two possible ways to add the admin key: Pulumi ESC or appsettings
                             Keys = new InputList<string>() { createArgs.SshKey },
                         },
                     }
@@ -100,7 +98,7 @@ namespace VirtualMachineWorker.PulumiStrategy
                     Provider = provider,
                 });
 
-                //Qemu agent moet enabled zijn, en instelling moet via cloud-init gebeuren in code, anders is er nog geen ip adres geweten vooraleer de vm geboot is
+                //QEMU agent must be enabled, and ip setup must be done via Initialization (cloud-init) in code (see above), otherwise the ip adress is not known until after the host has booted.
                 var ip = virtualMachine.Ipv4Addresses.Apply(res => res.LastOrDefault().LastOrDefault());
                 var proxmoxId = virtualMachine.Id;
                 var login = virtualMachine.Initialization.Apply(res => res!.UserAccount!.Username);
@@ -259,12 +257,6 @@ namespace VirtualMachineWorker.PulumiStrategy
         public required string Password { get; set; }
         public required string SshKey { get; set; }
     }
-
-    //public class ProxmoxVirtualMachineEditParams : VirtualMachineParams
-    //{
-    //    public int CloneId { get; set; }
-    //    public required string Login { get; set; }
-    //}
 
     public class ProxmoxVirtualMachineDeleteParams : VirtualMachineParams
     {

@@ -1,5 +1,5 @@
 ﻿using HogentVmPortal.Shared.Model;
-using Pulumi.Automation; //automation API
+using Pulumi.Automation;
 using VirtualMachineWorker.PulumiStrategy;
 
 namespace VirtualMachineWorker
@@ -9,17 +9,10 @@ namespace VirtualMachineWorker
         //https://www.pulumi.com/docs/using-pulumi/automation-api/getting-started-automation-api/
         private async Task HandleVirtualMachineCreateRequests()
         {
-            //_logger.LogInformation("Checking for create vm requests at: {time}", DateTimeOffset.Now);
-
             var createRequests = await _virtualMachineRequestRepository.GetAllCreateRequests();
             createRequests = createRequests.OrderBy(x => x.TimeStamp).ToList();
-            if (!createRequests.Any())
-            {
-                //_logger.LogInformation("No create vm requests at this moment: {time}", DateTimeOffset.Now);
-                return;
-            }
+            if (!createRequests.Any()) return;
 
-            //_logger.LogInformation("Start processing of " + createRequests.Count + " create vm request(s) at: {time}", DateTimeOffset.Now);
             ProviderStrategy? pulumiProvider;
             foreach (var createRequest in createRequests)
             {
@@ -72,15 +65,12 @@ namespace VirtualMachineWorker
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
-                    //_logger.LogInformation("Error while processing create vm request for " + createRequest.Name + " at: {time}", DateTimeOffset.Now);
 
                     //Delete the request
-                    //_logger.LogInformation("Deleting create vm request for " + createRequest.Name + " from database");
                     _virtualMachineRequestRepository.Delete(createRequest);
                     await _virtualMachineRequestRepository.SaveChangesAsync();
                 }
             }
-            //_logger.LogInformation("Finished processing of " + createRequests.Count + " create vm request(s) at: {time}", DateTimeOffset.Now);
         }
 
         //private async Task HandleVirtualMachineEditRequests()
@@ -143,37 +133,27 @@ namespace VirtualMachineWorker
 
         private async Task HandleVirtualMachineRemoveRequests()
         {
-            //_logger.LogInformation("Checking for remove vm requests at: {time}", DateTimeOffset.Now);
-
             var removeRequests = await _virtualMachineRequestRepository.GetAllRemoveRequests();
             removeRequests = removeRequests.OrderBy(x => x.TimeStamp).ToList();
-            if (!removeRequests.Any())
-            {
-                //_logger.LogInformation("No remove vm requests at this moment: {time}", DateTimeOffset.Now);
-                return;
-            }
+            if (!removeRequests.Any()) return;
 
-            //_logger.LogInformation("Start processing of " + removeRequests.Count + " remove vm request(s) at: {time}", DateTimeOffset.Now);
             ProviderStrategy? pulumiProvider;
 
             foreach (var removeRequest in removeRequests)
             {
                 try
                 {
-                    //TODO: build these with builder or factory, based on selected type in the VirtualMachineCreate viewmodel
                     var vmArgs = new ProxmoxVirtualMachineDeleteParams()
                     {
-                        //TargetNodeName = "proxmoxpve", //get from proxmoxConfig
                         VmName = removeRequest.Name,
                     };
 
-                    //TODO: build these with builder or factory, based on selected type in the VirtualMachineCreate viewmodel
                     pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
 
                     var projectName = "pulumi_inline";
                     var stackName = vmArgs.VmName;
 
-                    var pulumiVm = pulumiProvider.RemoveVirtualMachine(vmArgs); //rename var naar pulumiFn, functie CreateVirtualMachineRemoveFn()
+                    var pulumiVm = pulumiProvider.RemoveVirtualMachine(vmArgs);
                     var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiVm);
                     var stack = await LocalWorkspace.SelectStackAsync(stackArgs);
 
@@ -189,15 +169,12 @@ namespace VirtualMachineWorker
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
-                    //_logger.LogInformation("Error while processing remove vm request for " + removeRequest.Name + " at: {time}", DateTimeOffset.Now);
 
                     //Delete the request
-                    //_logger.LogInformation("Deleting remove vm request for " + removeRequest.Name + " from database");
                     _virtualMachineRequestRepository.Delete(removeRequest);
                     await _virtualMachineRequestRepository.SaveChangesAsync();
                 }
             }
-            //_logger.LogInformation("Finished processing of " + removeRequests.Count + " remove vm request(s) at: {time}", DateTimeOffset.Now);
         }
     }
 }

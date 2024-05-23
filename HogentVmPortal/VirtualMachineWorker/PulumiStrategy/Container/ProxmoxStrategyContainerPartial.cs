@@ -26,41 +26,14 @@ namespace VirtualMachineWorker.PulumiStrategy
                 var container = new Container(createArgs.ContainerName, new ContainerArgs
                 {
                     NodeName = _config.TargetNode,
-                    //Description = createArgs.ContainerName,
-                    //Disk = new ContainerDiskArgs
-                    //{
-                    //    DatastoreId = "local-lvm",
-                    //    Size = 8096,
-                    //},
-                    //Memory = new ContainerMemoryArgs
-                    //{
-                    //    Dedicated = 1048,
-                    //    //Swap = 0,
-                    //},
-                    //Features = new ContainerFeaturesArgs
-                    //{
-                    //    Nesting = true,
-                    //},
                     Clone = new ContainerCloneArgs
                     {
                         VmId = createArgs.CloneId,
                         DatastoreId = "local-lvm",
                         NodeName = _config.SourceNode,
                     },
-                    //Cpu = new ContainerCpuArgs
-                    //{
-                    //    Architecture = "amd64",
-                    //    Cores = 2,
-                    //    Units = 1024,
-                    //},
                     StartOnBoot = true,
                     Started = true,
-                    //Console = new ContainerConsoleArgs
-                    //{
-                    //    Enabled = true,
-                    //    TtyCount = 2,
-                    //    //Type = "string",
-                    //},
                     NetworkInterfaces = new[]
                     {
                         new ContainerNetworkInterfaceArgs
@@ -69,22 +42,10 @@ namespace VirtualMachineWorker.PulumiStrategy
                             Bridge = "vmbr0",
                             Enabled = true,
                             Firewall = true,
-                            //MacAddress = "string",
-                            //Mtu = 0,
-                            //RateLimit = 0,
-                            //VlanId = 0,
                         },
                     },
                     Initialization = new ContainerInitializationArgs
                     {
-                        //Dns = new ContainerInitializationDnsArgs
-                        //{
-                        //    Domain = "localdomain",
-                        //    Servers = new[]
-                        //    {
-                        //        "192.168.152.2",
-                        //    },
-                        //},
                         Hostname = createArgs.ContainerName,
                         IpConfigs = new[]
                         {
@@ -98,11 +59,6 @@ namespace VirtualMachineWorker.PulumiStrategy
                                 },
                             },
                         },
-                        //UserAccount = new ContainerInitializationUserAccountArgs
-                        //{
-                        //    Keys = new InputList<string>() { createArgs.SshKey },
-                        //    Password = createArgs.Password,
-                        //},
                     },
                 },
                 new CustomResourceOptions
@@ -145,11 +101,6 @@ namespace VirtualMachineWorker.PulumiStrategy
                 });
             });
         }
-
-        //public override PulumiFn EditContainer(ContainerParams cArgs)
-        //{
-        //    throw new NotImplementedException();
-        //}
     }
 
     public class ProxmoxContainerCreateParams : ContainerParams

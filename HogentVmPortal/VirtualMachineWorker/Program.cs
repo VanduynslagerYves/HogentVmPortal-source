@@ -26,7 +26,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         //read the proxmoxconfig in appsettings.json and enable them to be injected using ProxmoxConfig3
         //https://www.c-sharpcorner.com/article/asp-net-core-how-to-read-values-from-appsettings-json/
-        //eventueel Pulumi ESC?
+
         services.Configure<ProxmoxConfig>(configuration.GetSection("ProxmoxConfig"));
 
         services.AddHostedService<Worker>();

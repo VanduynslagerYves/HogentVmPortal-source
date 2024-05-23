@@ -10,7 +10,6 @@ namespace HogentVmPortal.Data.Repositories
 
         private readonly DbSet<VirtualMachineCreateRequest> _createRequests;
         private readonly DbSet<VirtualMachineRemoveRequest> _removeRequests;
-        //private readonly DbSet<VirtualMachineEditRequest> _editRequests;
 
         public VirtualMachineRequestRepository(ApplicationDbContext context)
         {
@@ -18,7 +17,6 @@ namespace HogentVmPortal.Data.Repositories
 
             _createRequests = _context.VirtualMachineCreateRequests;
             _removeRequests = _context.VirtualMachineRemoveRequests;
-            //_editRequests = _context.VirtualMachineEditRequests;
         }
 
         public async Task Add(VirtualMachineCreateRequest request)
@@ -30,11 +28,6 @@ namespace HogentVmPortal.Data.Repositories
         {
             await _removeRequests.AddAsync(request);
         }
-
-        //public async Task Add(VirtualMachineEditRequest request)
-        //{
-        //    await _editRequests.AddAsync(request);
-        //}
 
         public async Task SaveChangesAsync()
         {

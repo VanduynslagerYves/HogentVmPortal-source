@@ -90,7 +90,7 @@ namespace HogentVmPortal.Controllers
                     TempData["Message"] = string.Format("Creatie van container {0} is in behandeling", createRequest.Name);
                     return RedirectToAction(nameof(Index));
                 }
-                catch (KeyNotFoundException) //TODO: aanpassen naar Authorized ipv exception op not logged in
+                catch (KeyNotFoundException) //TODO: aanpassen naar authentication (Identity) ipv exception op not logged in
                 {
                     TempData["Error"] = "Not logged in!";
 
@@ -108,25 +108,6 @@ namespace HogentVmPortal.Controllers
 
             ViewData["Templates"] = GetTemplatesAsSelectList();
             return View(containerViewModel);
-        }
-
-        // GET: Container/Edit/5
-        public async Task<IActionResult> Edit(Guid id)
-        {
-            ContainerEdit? containerEdit;
-            try
-            {
-                var container = await _containerRepository.GetById(id);
-                ViewData["Name"] = container.Name;
-                containerEdit = ContainerEdit.ToViewModel(container);
-            }
-            catch (ContainerNotFoundException e)
-            {
-                TempData["Error"] = e.Message;
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(containerEdit);
         }
 
         // GET: Container/Delete/5

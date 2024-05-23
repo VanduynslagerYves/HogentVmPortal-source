@@ -117,23 +117,23 @@ namespace HogentVmPortal.Controllers
         }
 
         // GET: VirtualMachine/Edit/5
-        public async Task<IActionResult> Edit(Guid id)
-        {
-            VirtualMachineEdit? virtualMachineEdit;
-            try
-            {
-                var virtualMachine = await _vmRepository.GetById(id);
-                ViewData["Name"] = virtualMachine.Name;
-                virtualMachineEdit = VirtualMachineEdit.ToViewModel(virtualMachine);
-            }
-            catch (VirtualMachineNotFoundException e)
-            {
-                TempData["Error"] = e.Message;
-                return RedirectToAction(nameof(Index));
-            }
+        //public async Task<IActionResult> Edit(Guid id)
+        //{
+        //    VirtualMachineEdit? virtualMachineEdit;
+        //    try
+        //    {
+        //        var virtualMachine = await _vmRepository.GetById(id);
+        //        ViewData["Name"] = virtualMachine.Name;
+        //        virtualMachineEdit = VirtualMachineEdit.ToViewModel(virtualMachine);
+        //    }
+        //    catch (VirtualMachineNotFoundException e)
+        //    {
+        //        TempData["Error"] = e.Message;
+        //        return RedirectToAction(nameof(Index));
+        //    }
 
-            return View(virtualMachineEdit);
-        }
+        //    return View(virtualMachineEdit);
+        //}
 
         // POST: VirtualMachine/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
