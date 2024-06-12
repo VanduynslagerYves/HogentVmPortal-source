@@ -44,7 +44,7 @@ namespace HogentVmPortal.Controllers
             var currentUserId = User.GetId();
 
             var virtualMachines = await _vmRepository.GetAll(includeUsers: true);
-            virtualMachines = virtualMachines.Where(v => v.Owner.Id == currentUserId).ToList();
+            virtualMachines = !string.IsNullOrEmpty(currentUserId) ? virtualMachines.Where(v => v.Owner.Id == currentUserId).ToList() : new List<VirtualMachine>();
 
             return View(VirtualMachineListItem.ToViewModel(virtualMachines));
         }

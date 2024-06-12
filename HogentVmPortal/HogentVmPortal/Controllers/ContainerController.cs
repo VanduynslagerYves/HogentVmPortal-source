@@ -44,7 +44,7 @@ namespace HogentVmPortal.Controllers
             var currentUserId = User.GetId();
 
             var containers = await _containerRepository.GetAll(includeUsers: true);
-            containers = containers.Where(v => v.Owner.Id == currentUserId).ToList();
+            containers = !string.IsNullOrEmpty(currentUserId) ? containers.Where(v => v.Owner.Id == currentUserId).ToList() : new List<Container>();
 
             return View(ContainerListItem.ToViewModel(containers));
         }

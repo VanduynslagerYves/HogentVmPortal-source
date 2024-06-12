@@ -10,8 +10,8 @@ namespace HogentVmPortal.Extensions
             ClaimsIdentity? claimsIdentity = principal.Identity as ClaimsIdentity;
             var claim = claimsIdentity?.FindFirst(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrEmpty(claim?.Value)) throw new KeyNotFoundException();
-            return claim.Value;
+            //if (string.IsNullOrEmpty(claim?.Value)) throw new KeyNotFoundException();
+            return claim?.Value ?? string.Empty;
         }
     }
 }
