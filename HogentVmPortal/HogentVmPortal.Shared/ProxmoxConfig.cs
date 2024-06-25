@@ -1,4 +1,4 @@
-﻿namespace VirtualMachineWorker.Models
+﻿namespace HogentVmPortal.Shared
 {
     public class ProxmoxConfig
     {

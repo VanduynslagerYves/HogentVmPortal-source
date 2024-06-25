@@ -8,6 +8,7 @@ using Renci.SshNet;
 using Microsoft.Extensions.Options;
 using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared;
+using HogentVmPortal.Services;
 
 namespace HogentVmPortal.Controllers
 {
@@ -20,6 +21,8 @@ namespace HogentVmPortal.Controllers
 
         private readonly IAppUserRepository _appUserRepository;
 
+        private readonly VmApiService _vmApiService;
+
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
         public VirtualMachineController(IVirtualMachineRepository virtualMachineRepository,
@@ -27,7 +30,8 @@ namespace HogentVmPortal.Controllers
             IAppUserRepository appUserRepository,
             IVirtualMachineRequestRepository virtualMachineRequestRepository,
             ICourseRepository courseRepository,
-            IOptions<ProxmoxSshConfig> sshConfig)
+            IOptions<ProxmoxSshConfig> sshConfig,
+            VmApiService vmApiService)
         {
             _vmRepository = virtualMachineRepository;
             _vmTemplateRepository = templateRepository;
@@ -36,6 +40,8 @@ namespace HogentVmPortal.Controllers
             _courseRepository = courseRepository;
 
             _proxmoxSshConfig = sshConfig.Value;
+
+            _vmApiService = vmApiService;
         }
 
         // GET: VirtualMachine
@@ -90,8 +96,9 @@ namespace HogentVmPortal.Controllers
                         SshKey = virtualMachineViewModel.SshKey,
                     };
 
-                    await _vmRequestRepository.Add(createRequest);
-                    await _vmRequestRepository.SaveChangesAsync();
+                    //call API
+                    var response = await _vmApiService.CreateVmAsync(createRequest);
+                    ViewBag.Response = response;
 
                     TempData["Message"] = string.Format("Creatie van VM {0} is in behandeling", createRequest.Name);
                     return RedirectToAction(nameof(Index));
@@ -115,59 +122,6 @@ namespace HogentVmPortal.Controllers
             ViewData["Templates"] = GetTemplatesAsSelectList();
             return View(virtualMachineViewModel);
         }
-
-        // GET: VirtualMachine/Edit/5
-        //public async Task<IActionResult> Edit(Guid id)
-        //{
-        //    VirtualMachineEdit? virtualMachineEdit;
-        //    try
-        //    {
-        //        var virtualMachine = await _vmRepository.GetById(id);
-        //        ViewData["Name"] = virtualMachine.Name;
-        //        virtualMachineEdit = VirtualMachineEdit.ToViewModel(virtualMachine);
-        //    }
-        //    catch (VirtualMachineNotFoundException e)
-        //    {
-        //        TempData["Error"] = e.Message;
-        //        return RedirectToAction(nameof(Index));
-        //    }
-
-        //    return View(virtualMachineEdit);
-        //}
-
-        // POST: VirtualMachine/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,NewPassword")] VirtualMachineEdit virtualMachineEdit)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        try
-        //        {
-        //            var editRequest = new VirtualMachineEditRequest
-        //            {
-        //                Id = Guid.NewGuid(),
-        //                TimeStamp = DateTime.Now,
-        //                VmId = id,
-        //            };
-
-        //            await _vmRequestRepository.Add(editRequest);
-        //            await _vmRequestRepository.SaveChangesAsync();
-
-        //            TempData["Message"] = string.Format("Wachtwoordreset voor VM {0} is in behandeling", virtualMachineEdit.Name);
-        //            return RedirectToAction(nameof(Index));
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            TempData["Error"] = ex.Message;
-        //            return View(virtualMachineEdit);
-        //        }
-        //    }
-
-        //    return View(virtualMachineEdit);
-        //}
 
         // GET: VirtualMachine/Delete/5
         public async Task<IActionResult> Delete(Guid id)
@@ -197,7 +151,7 @@ namespace HogentVmPortal.Controllers
             {
                 var virtualMachine = await _vmRepository.GetById(id);
 
-                var request = new VirtualMachineRemoveRequest
+                var removeRequest = new VirtualMachineRemoveRequest
                 {
                     Id = Guid.NewGuid(),
                     TimeStamp = DateTime.UtcNow,
@@ -205,8 +159,9 @@ namespace HogentVmPortal.Controllers
                     VmId = virtualMachine.Id,
                 };
 
-                await _vmRequestRepository.Add(request);
-                await _vmRequestRepository.SaveChangesAsync();
+                //call API
+                var response = await _vmApiService.DeleteVmAsync(removeRequest);
+                ViewBag.Response = response;
 
                 TempData["Message"] = string.Format("Verwijderen van VM {0} is in behandeling", virtualMachine.Name);
             }

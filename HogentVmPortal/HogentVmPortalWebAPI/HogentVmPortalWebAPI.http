@@ -1,0 +1,6 @@
+@HogentVmPortalWebAPI_HostAddress = http://localhost:5067
+
+GET {{HogentVmPortalWebAPI_HostAddress}}/virtualmachine/
+Accept: application/json
+
+###
