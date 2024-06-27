@@ -1,7 +1,9 @@
 ﻿using HogentVmPortal.Shared.DTO;
 using HogentVmPortalWebAPI.Handlers;
+using HogentVmPortalWebAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace HogentVmPortalWebAPI.Controllers
 {
@@ -9,24 +11,31 @@ namespace HogentVmPortalWebAPI.Controllers
     [Route("api/[controller]")]
     public class VirtualMachineController : ControllerBase
     {
+        private readonly ILogger<VirtualMachineController> _logger;
+
         private readonly IBackgroundTaskQueue _taskQueue;
         private static ConcurrentDictionary<string, string> _taskStatuses = new ConcurrentDictionary<string, string>();
 
-        public VirtualMachineController(IBackgroundTaskQueue taskQueue)
+        public VirtualMachineController(IBackgroundTaskQueue taskQueue, ILogger<VirtualMachineController> logger)
         {
             _taskQueue = taskQueue;
+            _logger = logger;
         }
 
         [HttpPost("createvm")]
         public IActionResult CreateVm([FromBody] VirtualMachineCreateRequest request)
         {
-            var taskId = Guid.NewGuid().ToString();
-            _taskStatuses[taskId] = "Processing";
+            if (request == null) return BadRequest("Invalid request data");
 
-            _taskQueue.QueueBackgroundWorkItem(async token =>
+            var taskId = Guid.NewGuid().ToString();
+
+            //Can also do this: Task.Run(async () => await ProcessCreateRequestAsync(request, taskId));
+            //this will also immediately return a response while running the task in a background thread.
+            //This solution might suffer under heavy load (concurrent create requests), so working with a queue is generally preferred.
+
+            _taskQueue.Enqueue(async token =>
             {
                 await ProcessCreateRequestAsync(request, taskId, token);
-                _taskStatuses[taskId] = "Completed";
             });
 
             return Accepted(new { TaskId = taskId });
@@ -35,13 +44,13 @@ namespace HogentVmPortalWebAPI.Controllers
         [HttpPost("deletevm")]
         public IActionResult DeleteVm([FromBody] VirtualMachineRemoveRequest request)
         {
-            var taskId = Guid.NewGuid().ToString();
-            _taskStatuses[taskId] = "Processing";
+            if (request == null) return BadRequest("Invalid request data");
 
-            _taskQueue.QueueBackgroundWorkItem(async token =>
+            var taskId = Guid.NewGuid().ToString();
+
+            _taskQueue.Enqueue(async token =>
             {
                 await ProcessRemoveRequestAsync(request, taskId, token);
-                _taskStatuses[taskId] = "Completed";
             });
 
             return Accepted(new { TaskId = taskId });
@@ -62,6 +71,9 @@ namespace HogentVmPortalWebAPI.Controllers
         {
             try
             {
+                _taskStatuses[taskId] = "Processing";
+                _logger.LogInformation("Processing task {taskId}", taskId);
+
                 // Resolve VirtualMachineHandler through DI (TODO: check for DI in constructor)
                 using (var scope = HttpContext.RequestServices.CreateScope())
                 {
@@ -70,14 +82,17 @@ namespace HogentVmPortalWebAPI.Controllers
                 }
 
                 _taskStatuses[taskId] = "Completed";
+                _logger.LogInformation("Completed task {taskId}", taskId);
             }
             catch (OperationCanceledException)
             {
                 _taskStatuses[taskId] = "Cancelled";
+                _logger.LogInformation("Cancelled task {taskId}", taskId);
             }
             catch (Exception)
             {
                 _taskStatuses[taskId] = "Failed";
+                _logger.LogInformation("Failed task {taskId}", taskId);
             }
         }
 
@@ -85,6 +100,9 @@ namespace HogentVmPortalWebAPI.Controllers
         {
             try
             {
+                _taskStatuses[taskId] = "Processing";
+                _logger.LogInformation("Processing task {taskId}", taskId);
+
                 // Resolve VirtualMachineHandler through DI
                 using (var scope = HttpContext.RequestServices.CreateScope())
                 {
@@ -93,14 +111,17 @@ namespace HogentVmPortalWebAPI.Controllers
                 }
 
                 _taskStatuses[taskId] = "Completed";
+                _logger.LogInformation("Completed task {taskId}", taskId);
             }
             catch (OperationCanceledException)
             {
                 _taskStatuses[taskId] = "Cancelled";
+                _logger.LogInformation("Cancelled task {taskId}", taskId);
             }
             catch (Exception)
             {
                 _taskStatuses[taskId] = "Failed";
+                _logger.LogInformation("Failed task {taskId}", taskId);
             }
         }
     }

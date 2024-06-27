@@ -109,6 +109,8 @@ namespace HogentVmPortalWebAPI.ProviderStrategies
                 //QEMU agent must be enabled, and ip setup must be done via Initialization (cloud-init) in code (see above), otherwise the ip adress is not known until after the host has booted.
                 //TODO: look for a way to get the ip from Pulumi state (cloud)
                 //notes: these properties effectively already do this.
+
+                //TODO: try catch these. not filled in when an invalid SSH key is given. So validate this too.
                 var ip = virtualMachine.Ipv4Addresses.Apply(res => res.LastOrDefault().LastOrDefault());
                 var proxmoxId = virtualMachine.Id;
                 var login = virtualMachine.Initialization.Apply(res => res!.UserAccount!.Username);

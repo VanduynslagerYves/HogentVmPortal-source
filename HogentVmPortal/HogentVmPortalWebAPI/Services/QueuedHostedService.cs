@@ -9,6 +9,8 @@
         {
             _taskQueue = taskQueue;
             _logger = logger;
+
+            // Subscribe to the TaskAvailable event
             _taskQueue.TaskAvailable += OnTaskAvailable;
         }
 
@@ -18,15 +20,28 @@
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var workItem = await _taskQueue.DequeueAsync(stoppingToken);
-
+                Func<CancellationToken, Task>? workItem = null;
                 try
                 {
+                    //Dequeue a background work item
+                    workItem = await _taskQueue.Dequeue(stoppingToken);
+
+                    //Execute the work item
                     await workItem(stoppingToken);
+                }
+                catch(OperationCanceledException)
+                {
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error occurrred executing {workItem}.", nameof(workItem));
+                    if (workItem == null)
+                    {
+                        _logger.LogError(ex, "Error occurred executing the work item");
+                    }
+                    else
+                    {
+                        _logger.LogError(ex, "Error occurrred executing {workItem}", nameof(workItem));
+                    }
                 }
             }
 
