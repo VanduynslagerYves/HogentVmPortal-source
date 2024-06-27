@@ -18,10 +18,7 @@ namespace HogentVmPortalWebAPI
 
         public void Enqueue(Func<CancellationToken, Task> workItem)
         {
-            if(workItem == null)
-            {
-                throw new ArgumentNullException(nameof(workItem));
-            }
+            if(workItem == null) throw new ArgumentNullException(nameof(workItem));
 
             _workItems.Enqueue(workItem);
 

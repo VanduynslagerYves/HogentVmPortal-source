@@ -20,16 +20,33 @@
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                Func<CancellationToken, Task>? workItem = null;
+                //non concurrent
+                //Dequeue a background work item
+                //    var workItem = await _taskQueue.Dequeue(stoppingToken);
+                //try
+                //{
+                //    await workItem(stoppingToken);
+                //}
+
+                var workItem = await _taskQueue.Dequeue(stoppingToken);
                 try
                 {
-                    //Dequeue a background work item
-                    workItem = await _taskQueue.Dequeue(stoppingToken);
+                    // Dequeue a task using the updated Dequeue method
 
-                    //Execute the work item
-                    await workItem(stoppingToken);
+                    // Execute the dequeued task concurrently
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await workItem(stoppingToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error occurred executing the dequeued task.");
+                        }
+                    }, stoppingToken);
                 }
-                catch(OperationCanceledException)
+                catch (OperationCanceledException)
                 {
                 }
                 catch (Exception ex)

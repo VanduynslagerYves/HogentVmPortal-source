@@ -1,9 +1,7 @@
 ﻿using HogentVmPortal.Shared.DTO;
 using HogentVmPortalWebAPI.Handlers;
-using HogentVmPortalWebAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace HogentVmPortalWebAPI.Controllers
 {
@@ -13,13 +11,19 @@ namespace HogentVmPortalWebAPI.Controllers
     {
         private readonly ILogger<VirtualMachineController> _logger;
 
+        //IServiceScopeFactory to ensure that scoped dependencies are resolved correctly, even when there's no active HTTP context.
+        //This is mandatory to resolve dependencies for the 2nd and later tasks in the taskqueue
+        //for reference: IServiceProvider only works within the current HTTP context (phew)
+        private readonly IServiceScopeFactory _scopeFactory;
+
         private readonly IBackgroundTaskQueue _taskQueue;
         private static ConcurrentDictionary<string, string> _taskStatuses = new ConcurrentDictionary<string, string>();
 
-        public VirtualMachineController(IBackgroundTaskQueue taskQueue, ILogger<VirtualMachineController> logger)
+        public VirtualMachineController(IBackgroundTaskQueue taskQueue, ILogger<VirtualMachineController> logger, IServiceScopeFactory scopeFactory)
         {
             _taskQueue = taskQueue;
             _logger = logger;
+            _scopeFactory = scopeFactory;
         }
 
         [HttpPost("createvm")]
@@ -33,6 +37,7 @@ namespace HogentVmPortalWebAPI.Controllers
             //this will also immediately return a response while running the task in a background thread.
             //This solution might suffer under heavy load (concurrent create requests), so working with a queue is generally preferred.
 
+            //Enqueue a create task
             _taskQueue.Enqueue(async token =>
             {
                 await ProcessCreateRequestAsync(request, taskId, token);
@@ -67,6 +72,7 @@ namespace HogentVmPortalWebAPI.Controllers
             return NotFound(new { TaskId = taskId, Status = "Not Found" });
         }
 
+        //This task will be saved in a queue, so we need to create a new scope for each task, so dependencies for the task can be correctly resolved with DI
         private async Task ProcessCreateRequestAsync(VirtualMachineCreateRequest request, string taskId, CancellationToken token)
         {
             try
@@ -74,8 +80,8 @@ namespace HogentVmPortalWebAPI.Controllers
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
-                // Resolve VirtualMachineHandler through DI (TODO: check for DI in constructor)
-                using (var scope = HttpContext.RequestServices.CreateScope())
+                // Resolve VirtualMachineHandler through DI (without the need of an HTTP context)
+                using(var scope = _scopeFactory.CreateScope())
                 {
                     var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
                     await handler.HandleVirtualMachineCreateRequest(request);
@@ -96,6 +102,7 @@ namespace HogentVmPortalWebAPI.Controllers
             }
         }
 
+        //This task will be saved in a queue, so we need to create a new scope for each task, so dependencies for the task can be correctly resolved with DI
         private async Task ProcessRemoveRequestAsync(VirtualMachineRemoveRequest request, string taskId, CancellationToken token)
         {
             try
@@ -103,8 +110,8 @@ namespace HogentVmPortalWebAPI.Controllers
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
-                // Resolve VirtualMachineHandler through DI
-                using (var scope = HttpContext.RequestServices.CreateScope())
+                // Resolve VirtualMachineHandler through DI (without the need of an HTTP context)
+                using (var scope = _scopeFactory.CreateScope())
                 {
                     var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
                     await handler.HandleVirtualMachineRemoveRequest(request);

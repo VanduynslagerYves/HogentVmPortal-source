@@ -79,7 +79,6 @@ namespace HogentVmPortalWebAPI.Handlers
                 if (result.Outputs.TryGetValue("id", out var proxmoxId)) virtualMachine.ProxmoxId = int.Parse(proxmoxId.Value.ToString()!);
                 if (result.Outputs.TryGetValue("login", out var login)) virtualMachine.Login = login.Value.ToString();
 
-                var t = await stack.GetInfoAsync();
                 await _virtualMachineRepository.Add(virtualMachine);
                 await _virtualMachineRepository.SaveChangesAsync();
             }
