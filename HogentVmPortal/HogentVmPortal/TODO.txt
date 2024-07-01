@@ -1,6 +1,6 @@
-- refactor container logic
 - data fetch via API (later gRPC) instead of straight to db + move repositories to Shared
 - check if queue is absolutely necessary in the service. probably better to work per request if we execute the request on a separate background thread
+	Queue is needed for containers, on cloning the template ct is locked so not possible to clone concurrently.
 
 using Blazor server fixes next 2 items (SignalR is baked in):
 (blazor wasm can also use SignalR, but needs to be set up manually, same for data representation)

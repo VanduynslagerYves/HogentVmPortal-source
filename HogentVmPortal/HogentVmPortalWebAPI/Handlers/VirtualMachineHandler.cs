@@ -50,22 +50,23 @@ namespace HogentVmPortalWebAPI.Handlers
                     Template = template,
                 };
 
-                var vmArgs = new ProxmoxVirtualMachineCreateParams()
-                {
-                    Login = createRequest.Login,
-                    Password = createRequest.Password,
-                    VmName = createRequest.Name,
-                    CloneId = createRequest.CloneId,
-                    SshKey = createRequest.SshKey,
-                };
+                var vmArgs = ProxmoxVirtualMachineCreateParams.FromViewModel(createRequest);
+                //var vmArgs = new ProxmoxVirtualMachineCreateParams()
+                //{
+                //    Login = createRequest.Login,
+                //    Password = createRequest.Password,
+                //    VmName = createRequest.Name,
+                //    CloneId = createRequest.CloneId,
+                //    SshKey = createRequest.SshKey,
+                //};
 
                 pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value); //TODO: init in base
 
                 var projectName = "pulumi_inline";
                 var stackName = vmArgs.VmName;
 
-                var virtualMachineDefinition = pulumiProvider.CreateVirtualMachine(vmArgs);
-                var stackArgs = new InlineProgramArgs(projectName, stackName, virtualMachineDefinition);
+                var pulumiFn = pulumiProvider.CreateVirtualMachine(vmArgs);
+                var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiFn);
                 var stack = await LocalWorkspace.CreateOrSelectStackAsync(stackArgs);
 
                 //use Task.Run if the method called is CPU bound (work is done in a separate background thread)
@@ -96,18 +97,15 @@ namespace HogentVmPortalWebAPI.Handlers
 
             try
             {
-                var vmArgs = new ProxmoxVirtualMachineDeleteParams()
-                {
-                    VmName = removeRequest.Name,
-                };
+                var vmArgs = ProxmoxVirtualMachineDeleteParams.FromViewModel(removeRequest);
 
                 pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
 
                 var projectName = "pulumi_inline";
                 var stackName = vmArgs.VmName;
 
-                var pulumiVm = pulumiProvider.RemoveVirtualMachine(vmArgs);
-                var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiVm);
+                var pulumiFn = pulumiProvider.RemoveVirtualMachine(vmArgs);
+                var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiFn);
                 var stack = await LocalWorkspace.SelectStackAsync(stackArgs);
 
                 await stack.DestroyAsync(new DestroyOptions { OnStandardOutput = Console.WriteLine }); //destroying the stack only removes the resources in the stack

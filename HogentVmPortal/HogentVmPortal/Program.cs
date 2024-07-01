@@ -32,7 +32,9 @@ builder.Services.Configure<ProxmoxSshConfig>(builder.Configuration.GetSection("P
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
-builder.Services.AddTransient<VmApiService>();
+
+builder.Services.AddTransient<VirtualMachineApiService>();
+builder.Services.AddTransient<ContainerApiService>();
 
 var app = builder.Build();
 

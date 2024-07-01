@@ -4,43 +4,41 @@ using System.Text.Json;
 
 namespace HogentVmPortal.Services
 {
-    public class VmApiService
+    public class ContainerApiService
     {
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public VmApiService(IHttpClientFactory httpClientFactory)
+        public ContainerApiService(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<string> CreateVmAsync(VirtualMachineCreateRequest request)
+        public async Task<string> CreateContainerAsync(ContainerCreateRequest request)
         {
             var httpClient = _httpClientFactory.CreateClient();
             var jsonContent = JsonSerializer.Serialize(request);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            //TODO: get the correct url from appsettings
-            var response = await httpClient.PostAsync("https://localhost:7296/api/virtualmachine/createvm", content);
-            //http://localhost:5067
-            //https://localhost:7296
-            response.EnsureSuccessStatusCode();
+            var response = await httpClient.PostAsync("https://localhost:7296/api/container/create", content);
 
+            response.EnsureSuccessStatusCode();
             var responseBody = await response.Content.ReadAsStringAsync();
+
             return responseBody;
         }
 
-        public async Task<string> DeleteVmAsync(VirtualMachineRemoveRequest request)
+        public async Task<string> RemoveContainerAsync(ContainerRemoveRequest request)
         {
             var httpClient = _httpClientFactory.CreateClient();
             var jsonContent = JsonSerializer.Serialize(request);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             //TODO: get the correct url from appsettings
-            var response = await httpClient.PostAsync("https://localhost:7296/api/virtualmachine/deletevm", content);
+            var response = await httpClient.PostAsync("https://localhost:7296/api/container/delete", content);
 
             response.EnsureSuccessStatusCode();
-
             var responseBody = await response.Content.ReadAsStringAsync();
+
             return responseBody;
         }
     }

@@ -42,6 +42,7 @@ builder.Services.AddScoped<IContainerTemplateRepository, ContainerTemplateReposi
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
 builder.Services.AddScoped<VirtualMachineHandler>();
+builder.Services.AddScoped<ContainerHandler>();
 
 var app = builder.Build();
 

@@ -7,46 +7,37 @@ namespace HogentVmPortalWebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class VirtualMachineController : ControllerBase
+    public class ContainerController : ControllerBase
     {
-        private readonly ILogger<VirtualMachineController> _logger;
+        private readonly ILogger<ContainerController> _logger;
         private readonly IServiceProvider _serviceProvider;
 
         private static ConcurrentDictionary<string, string> _taskStatuses = new ConcurrentDictionary<string, string>();
 
-        public VirtualMachineController(ILogger<VirtualMachineController> logger, IServiceProvider serviceProvider)
+        public ContainerController(ILogger<ContainerController> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
         }
 
         [HttpPost("create")]
-        public IActionResult Create(VirtualMachineCreateRequest request)
+        public IActionResult Create(ContainerCreateRequest request)
         {
             if (request == null) return BadRequest("Invalid request data");
 
             var taskId = Guid.NewGuid().ToString();
 
-            //Can also do this: Task.Run(async () => await ProcessCreateRequestAsync(request, taskId));
-            //this will also immediately return a response while running the task in a background thread.
-            //This solution might suffer under heavy load (concurrent create requests), so working with a queue is generally preferred.
-
+            //TODO: use queued implementation for creation: template ct is locked during cloning
             Task.Run(async () =>
             {
                 await ProcessCreateRequestAsync(request, taskId);
             });
 
-            //Enqueue a create task
-            //_taskQueue.Enqueue(async token =>
-            //{
-            //    await ProcessCreateRequestAsync(request, taskId, token);
-            //});
-
             return Accepted(new { TaskId = taskId });
         }
 
         [HttpPost("delete")]
-        public IActionResult Delete(VirtualMachineRemoveRequest request)
+        public IActionResult Delete(ContainerRemoveRequest request)
         {
             if (request == null) return BadRequest("Invalid request data");
 
@@ -56,12 +47,6 @@ namespace HogentVmPortalWebAPI.Controllers
             {
                 await ProcessRemoveRequestAsync(request, taskId);
             });
-
-            //Enqueue a remove task
-            //_taskQueue.Enqueue(async token =>
-            //{
-            //    await ProcessRemoveRequestAsync(request, taskId, token);
-            //});
 
             return Accepted(new { TaskId = taskId });
         }
@@ -78,24 +63,17 @@ namespace HogentVmPortalWebAPI.Controllers
         }
 
         //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
-        private async Task ProcessCreateRequestAsync(VirtualMachineCreateRequest request, string taskId)
+        private async Task ProcessCreateRequestAsync(ContainerCreateRequest request, string taskId)
         {
             try
             {
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
-                // Resolve VirtualMachineHandler through DI (without the need of an HTTP context)
-                //using(var scope = _scopeFactory.CreateScope())
-                //{
-                //    var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
-                //    await handler.HandleVirtualMachineCreateRequest(request);
-                //}
-
                 using (var scope = _serviceProvider.CreateScope())
                 {
-                    var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
-                    await handler.HandleVirtualMachineCreateRequest(request);
+                    var handler = scope.ServiceProvider.GetRequiredService<ContainerHandler>();
+                    await handler.HandleContainerCreateRequest(request);
                 }
 
                 _taskStatuses[taskId] = "Completed";
@@ -108,19 +86,18 @@ namespace HogentVmPortalWebAPI.Controllers
             }
         }
 
-        //This task will be saved in a queue, so we need to create a new scope for each task, so dependencies for the task can be correctly resolved with DI
-        private async Task ProcessRemoveRequestAsync(VirtualMachineRemoveRequest request, string taskId)
+        //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
+        private async Task ProcessRemoveRequestAsync(ContainerRemoveRequest request, string taskId)
         {
             try
             {
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
-                // Resolve VirtualMachineHandler through DI (without the need of an HTTP context)
                 using (var scope = _serviceProvider.CreateScope())
                 {
-                    var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
-                    await handler.HandleVirtualMachineRemoveRequest(request);
+                    var handler = scope.ServiceProvider.GetRequiredService<ContainerHandler>();
+                    await handler.HandleContainerRemoveRequest(request);
                 }
 
                 _taskStatuses[taskId] = "Completed";

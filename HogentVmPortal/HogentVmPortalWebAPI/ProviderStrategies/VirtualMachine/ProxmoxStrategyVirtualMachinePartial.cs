@@ -4,6 +4,7 @@ using Pulumi.ProxmoxVE.VM;
 using Pulumi.ProxmoxVE;
 using Pulumi;
 using Pulumi.ProxmoxVE.Inputs;
+using HogentVmPortal.Shared.DTO;
 
 namespace HogentVmPortalWebAPI.ProviderStrategies
 {
@@ -268,9 +269,28 @@ namespace HogentVmPortalWebAPI.ProviderStrategies
         public required string Login { get; set; }
         public required string Password { get; set; }
         public required string SshKey { get; set; }
+
+        public static ProxmoxVirtualMachineCreateParams FromViewModel(VirtualMachineCreateRequest request)
+        {
+            return new ProxmoxVirtualMachineCreateParams
+            {
+                CloneId = request.CloneId,
+                Login = request.Login,
+                Password = request.Password,
+                SshKey = request.SshKey,
+                VmName = request.Name,
+            };
+        }
     }
 
     public class ProxmoxVirtualMachineDeleteParams : VirtualMachineParams
     {
+        public static ProxmoxVirtualMachineDeleteParams FromViewModel(VirtualMachineRemoveRequest request)
+        {
+            return new ProxmoxVirtualMachineDeleteParams
+            {
+                VmName = request.Name,
+            };
+        }
     }
 }

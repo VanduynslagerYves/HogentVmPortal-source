@@ -3,6 +3,7 @@ using Pulumi.ProxmoxVE;
 using Pulumi;
 using Pulumi.ProxmoxVE.CT;
 using Pulumi.ProxmoxVE.CT.Inputs;
+using HogentVmPortal.Shared.DTO;
 
 namespace HogentVmPortalWebAPI.ProviderStrategies
 {
@@ -81,7 +82,7 @@ namespace HogentVmPortalWebAPI.ProviderStrategies
 
         public override PulumiFn RemoveContainer(ContainerParams cArgs)
         {
-            var deleteArgs = cArgs as ProxmoxContainerDeleteParams;
+            var deleteArgs = cArgs as ProxmoxContainerRemoveParams;
             if (deleteArgs == null) throw new ArgumentNullException();
 
             return PulumiFn.Create(() =>
@@ -110,14 +111,25 @@ namespace HogentVmPortalWebAPI.ProviderStrategies
     public class ProxmoxContainerCreateParams : ContainerParams
     {
         public int CloneId { get; set; }
+
+        public static ProxmoxContainerCreateParams FromViewModel(ContainerCreateRequest request)
+        {
+            return new ProxmoxContainerCreateParams
+            {
+                ContainerName = request.Name,
+                CloneId = request.CloneId
+            };
+        }
     }
 
-    public class ProxmoxContainerEditParams : ContainerParams
+    public class ProxmoxContainerRemoveParams : ContainerParams
     {
-        public int CloneId { get; set; }
-    }
-
-    public class ProxmoxContainerDeleteParams : ContainerParams
-    {
+        public static ProxmoxContainerRemoveParams FromViewModel(ContainerRemoveRequest request)
+        {
+            return new ProxmoxContainerRemoveParams
+            {
+                ContainerName = request.Name
+            };
+        }
     }
 }

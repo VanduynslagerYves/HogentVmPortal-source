@@ -31,16 +31,11 @@ namespace HogentVmPortalWebAPI.Handlers
             _proxmoxSshConfig = proxmoxSshConfig;
         }
 
-        private async Task HandleContainerCreateRequest(ContainerCreateRequest createRequest)
+        public async Task HandleContainerCreateRequest(ContainerCreateRequest createRequest)
         {
-            //var createRequests = await _containerRequestRepository.GetAllCreateRequests();
-            //createRequests = createRequests.OrderBy(x => x.TimeStamp).ToList();
-
             if (createRequest == null) return;
 
             ProviderStrategy? pulumiProvider;
-            //foreach (var createRequest in createRequests)
-            //{
             try
             {
                 var owner = await _appUserRepository.GetById(createRequest.OwnerId);
@@ -54,19 +49,15 @@ namespace HogentVmPortalWebAPI.Handlers
                     Template = template,
                 };
 
-                var vmArgs = new ProxmoxContainerCreateParams()
-                {
-                    ContainerName = createRequest.Name,
-                    CloneId = createRequest.CloneId,
-                };
+                var vmArgs = ProxmoxContainerCreateParams.FromViewModel(createRequest);
 
                 pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
 
                 var projectName = "pulumi_inline";
                 var stackName = vmArgs.ContainerName;
 
-                var containerDefinition = pulumiProvider.CreateContainer(vmArgs);
-                var stackArgs = new InlineProgramArgs(projectName, stackName, containerDefinition);
+                var pulumiFn = pulumiProvider.CreateContainer(vmArgs);
+                var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiFn);
                 var stack = await LocalWorkspace.CreateOrSelectStackAsync(stackArgs);
 
                 //var result = await Task.Run(() => stack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine, ShowSecrets = true }));
@@ -82,37 +73,22 @@ namespace HogentVmPortalWebAPI.Handlers
 
                 await _containerRepository.Add(container);
                 await _containerRepository.SaveChangesAsync();
-
-                //_containerRequestRepository.Delete(createRequest);
-                //await _containerRequestRepository.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-
-                //Delete the request
-                //_containerRequestRepository.Delete(createRequest);
-                //await _containerRequestRepository.SaveChangesAsync();
             }
         }
 
-        private async Task HandleContainerRemoveRequests(ContainerRemoveRequest removeRequest)
+        public async Task HandleContainerRemoveRequest(ContainerRemoveRequest removeRequest)
         {
-            //var removeRequests = await _containerRequestRepository.GetAllRemoveRequests();
-            //removeRequests = removeRequests.OrderBy(x => x.TimeStamp).ToList();
-
             if (removeRequest == null) return;
 
             ProviderStrategy? pulumiProvider;
 
-            //foreach (var removeRequest in removeRequests)
-            //{
             try
             {
-                var vmArgs = new ProxmoxContainerDeleteParams()
-                {
-                    ContainerName = removeRequest.Name,
-                };
+                var vmArgs = ProxmoxContainerRemoveParams.FromViewModel(removeRequest);
 
                 pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
 
@@ -128,19 +104,11 @@ namespace HogentVmPortalWebAPI.Handlers
 
                 await _containerRepository.Delete(removeRequest.VmId);
                 await _containerRepository.SaveChangesAsync();
-
-                //_containerRequestRepository.Delete(removeRequest);
-                //await _containerRequestRepository.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-
-                //Delete the request
-                //_containerRequestRepository.Delete(removeRequest);
-                //await _containerRequestRepository.SaveChangesAsync();
             }
-            //}
         }
 
         /// <summary>

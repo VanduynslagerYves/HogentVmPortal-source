@@ -21,7 +21,7 @@ namespace HogentVmPortal.Controllers
 
         private readonly IAppUserRepository _appUserRepository;
 
-        private readonly VmApiService _vmApiService;
+        private readonly VirtualMachineApiService _vmApiService;
 
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
@@ -31,7 +31,7 @@ namespace HogentVmPortal.Controllers
             IVirtualMachineRequestRepository virtualMachineRequestRepository,
             ICourseRepository courseRepository,
             IOptions<ProxmoxSshConfig> sshConfig,
-            VmApiService vmApiService)
+            VirtualMachineApiService vmApiService)
         {
             _vmRepository = virtualMachineRepository;
             _vmTemplateRepository = templateRepository;
@@ -160,7 +160,7 @@ namespace HogentVmPortal.Controllers
                 };
 
                 //call API
-                var response = await _vmApiService.DeleteVmAsync(removeRequest);
+                var response = await _vmApiService.RemoveVmAsync(removeRequest);
                 ViewBag.Response = response;
 
                 TempData["Message"] = string.Format("Verwijderen van VM {0} is in behandeling", virtualMachine.Name);
