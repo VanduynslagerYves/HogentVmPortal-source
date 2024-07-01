@@ -10,20 +10,14 @@ namespace HogentVmPortalWebAPI.Controllers
     public class VirtualMachineController : ControllerBase
     {
         private readonly ILogger<VirtualMachineController> _logger;
+        private readonly IServiceProvider _serviceProvider;
 
-        //IServiceScopeFactory to ensure that scoped dependencies are resolved correctly, even when there's no active HTTP context.
-        //This is mandatory to resolve dependencies for the 2nd and later tasks in the taskqueue
-        //for reference: IServiceProvider only works within the current HTTP context (phew)
-        private readonly IServiceScopeFactory _scopeFactory;
-
-        private readonly IBackgroundTaskQueue _taskQueue;
         private static ConcurrentDictionary<string, string> _taskStatuses = new ConcurrentDictionary<string, string>();
 
-        public VirtualMachineController(IBackgroundTaskQueue taskQueue, ILogger<VirtualMachineController> logger, IServiceScopeFactory scopeFactory)
+        public VirtualMachineController(ILogger<VirtualMachineController> logger, IServiceProvider serviceProvider)
         {
-            _taskQueue = taskQueue;
             _logger = logger;
-            _scopeFactory = scopeFactory;
+            _serviceProvider = serviceProvider;
         }
 
         [HttpPost("createvm")]
@@ -37,11 +31,16 @@ namespace HogentVmPortalWebAPI.Controllers
             //this will also immediately return a response while running the task in a background thread.
             //This solution might suffer under heavy load (concurrent create requests), so working with a queue is generally preferred.
 
-            //Enqueue a create task
-            _taskQueue.Enqueue(async token =>
+            Task.Run(async () =>
             {
-                await ProcessCreateRequestAsync(request, taskId, token);
+                await ProcessCreateRequestAsync(request, taskId);
             });
+
+            //Enqueue a create task
+            //_taskQueue.Enqueue(async token =>
+            //{
+            //    await ProcessCreateRequestAsync(request, taskId, token);
+            //});
 
             return Accepted(new { TaskId = taskId });
         }
@@ -53,10 +52,16 @@ namespace HogentVmPortalWebAPI.Controllers
 
             var taskId = Guid.NewGuid().ToString();
 
-            _taskQueue.Enqueue(async token =>
+            Task.Run(async () =>
             {
-                await ProcessRemoveRequestAsync(request, taskId, token);
+                await ProcessRemoveRequestAsync(request, taskId);
             });
+
+            //Enqueue a remove task
+            //_taskQueue.Enqueue(async token =>
+            //{
+            //    await ProcessRemoveRequestAsync(request, taskId, token);
+            //});
 
             return Accepted(new { TaskId = taskId });
         }
@@ -72,8 +77,8 @@ namespace HogentVmPortalWebAPI.Controllers
             return NotFound(new { TaskId = taskId, Status = "Not Found" });
         }
 
-        //This task will be saved in a queue, so we need to create a new scope for each task, so dependencies for the task can be correctly resolved with DI
-        private async Task ProcessCreateRequestAsync(VirtualMachineCreateRequest request, string taskId, CancellationToken token)
+        //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
+        private async Task ProcessCreateRequestAsync(VirtualMachineCreateRequest request, string taskId)
         {
             try
             {
@@ -81,7 +86,13 @@ namespace HogentVmPortalWebAPI.Controllers
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
                 // Resolve VirtualMachineHandler through DI (without the need of an HTTP context)
-                using(var scope = _scopeFactory.CreateScope())
+                //using(var scope = _scopeFactory.CreateScope())
+                //{
+                //    var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
+                //    await handler.HandleVirtualMachineCreateRequest(request);
+                //}
+
+                using (var scope = _serviceProvider.CreateScope())
                 {
                     var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
                     await handler.HandleVirtualMachineCreateRequest(request);
@@ -89,11 +100,6 @@ namespace HogentVmPortalWebAPI.Controllers
 
                 _taskStatuses[taskId] = "Completed";
                 _logger.LogInformation("Completed task {taskId}", taskId);
-            }
-            catch (OperationCanceledException)
-            {
-                _taskStatuses[taskId] = "Cancelled";
-                _logger.LogInformation("Cancelled task {taskId}", taskId);
             }
             catch (Exception)
             {
@@ -103,7 +109,7 @@ namespace HogentVmPortalWebAPI.Controllers
         }
 
         //This task will be saved in a queue, so we need to create a new scope for each task, so dependencies for the task can be correctly resolved with DI
-        private async Task ProcessRemoveRequestAsync(VirtualMachineRemoveRequest request, string taskId, CancellationToken token)
+        private async Task ProcessRemoveRequestAsync(VirtualMachineRemoveRequest request, string taskId)
         {
             try
             {
@@ -111,7 +117,7 @@ namespace HogentVmPortalWebAPI.Controllers
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
                 // Resolve VirtualMachineHandler through DI (without the need of an HTTP context)
-                using (var scope = _scopeFactory.CreateScope())
+                using (var scope = _serviceProvider.CreateScope())
                 {
                     var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
                     await handler.HandleVirtualMachineRemoveRequest(request);
@@ -119,11 +125,6 @@ namespace HogentVmPortalWebAPI.Controllers
 
                 _taskStatuses[taskId] = "Completed";
                 _logger.LogInformation("Completed task {taskId}", taskId);
-            }
-            catch (OperationCanceledException)
-            {
-                _taskStatuses[taskId] = "Cancelled";
-                _logger.LogInformation("Cancelled task {taskId}", taskId);
             }
             catch (Exception)
             {

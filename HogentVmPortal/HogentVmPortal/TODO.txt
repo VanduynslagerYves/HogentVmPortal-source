@@ -1,0 +1,22 @@
+- refactor container logic
+- data fetch via API (later gRPC) instead of straight to db + move repositories to Shared
+- check if queue is absolutely necessary in the service. probably better to work per request if we execute the request on a separate background thread
+
+using Blazor server fixes next 2 items (SignalR is baked in):
+(blazor wasm can also use SignalR, but needs to be set up manually, same for data representation)
+(no need to use javascript to update front-end data)
+- SignalR: update data on change in front-end, or use built-in mssql functionality (name?)
+- front-end: mvc controller and api controlle seperately? fetch data in js
+=> use Blazor server
+
+- gRPC instead of REST for HogentVmPortalWebAPI
+
+- implement authentication for webapp and api('s), check what's best to use
+- check how to work with Cancellationtoken
+- simplify delegate use for ActionEvent? Maybe switch to semaphore (check)
+
+- App: .NET MAUI?
+- extra web API that calls the data service (or repository)
+- validate data in this service instead of controller
+
+- checkout nginx or haproxy (load balancing etc) for microservices, can be used with gRPC

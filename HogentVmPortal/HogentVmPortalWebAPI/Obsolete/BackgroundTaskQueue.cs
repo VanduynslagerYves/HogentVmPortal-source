@@ -1,7 +1,8 @@
 ﻿using System.Collections.Concurrent;
 
-namespace HogentVmPortalWebAPI
+namespace HogentVmPortalWebAPI.Obsolete
 {
+    [Obsolete("wtf KISS")]
     public interface IBackgroundTaskQueue
     {
         void Enqueue(Func<CancellationToken, Task> workItem);
@@ -11,14 +12,16 @@ namespace HogentVmPortalWebAPI
         event EventHandler TaskAvailable;
     }
 
+    [Obsolete("wtf KISS")]
     public class BackgroundTaskQueue : IBackgroundTaskQueue
     {
         private readonly ConcurrentQueue<Func<CancellationToken, Task>> _workItems = new ConcurrentQueue<Func<CancellationToken, Task>>();
         public event EventHandler? TaskAvailable;
 
+        [Obsolete("wtf KISS")]
         public void Enqueue(Func<CancellationToken, Task> workItem)
         {
-            if(workItem == null) throw new ArgumentNullException(nameof(workItem));
+            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
 
             _workItems.Enqueue(workItem);
 
@@ -35,6 +38,7 @@ namespace HogentVmPortalWebAPI
         
         Cancellation Support: The method supports cancellation through a CancellationToken, allowing the waiting operation to be canceled.
         */
+        [Obsolete("wtf KISS")]
         public Task<Func<CancellationToken, Task>> Dequeue(CancellationToken cancellationToken)
         {
             // Check if there's a task available in the queue, and if so return it

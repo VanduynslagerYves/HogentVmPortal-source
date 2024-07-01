@@ -1,9 +1,7 @@
 using HogentVmPortal.Shared;
 using HogentVmPortal.Shared.Data;
-using HogentVmPortalWebAPI;
 using HogentVmPortalWebAPI.Data.Repositories;
 using HogentVmPortalWebAPI.Handlers;
-using HogentVmPortalWebAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,8 +11,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
-builder.Services.AddHostedService<QueuedHostedService>();
+//builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+//builder.Services.AddHostedService<QueuedHostedService>();
 
 // SSH Config
 builder.Services.Configure<ProxmoxSshConfig>(builder.Configuration.GetSection("ProxmoxSshConfig"));

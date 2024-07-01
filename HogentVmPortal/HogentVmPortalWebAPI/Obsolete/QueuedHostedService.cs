@@ -1,5 +1,7 @@
-﻿namespace HogentVmPortalWebAPI.Services
+﻿namespace HogentVmPortalWebAPI.Obsolete
 {
+    //taskqueue injected as singleton
+    [Obsolete("wtf KISS")]
     public class QueuedHostedService : BackgroundService
     {
         private readonly ILogger<QueuedHostedService> _logger;
@@ -28,6 +30,7 @@
                 //    await workItem(stoppingToken);
                 //}
 
+                //Each task in the queue will be dequeued and will be executed in a background thread
                 var workItem = await _taskQueue.Dequeue(stoppingToken);
                 try
                 {
