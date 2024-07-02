@@ -16,7 +16,6 @@ namespace HogentVmPortal.Controllers
     {
         private readonly IVirtualMachineRepository _vmRepository;
         private readonly IVirtualMachineTemplateRepository _vmTemplateRepository;
-        private readonly IVirtualMachineRequestRepository _vmRequestRepository;
         private readonly ICourseRepository _courseRepository;
 
         private readonly IAppUserRepository _appUserRepository;
@@ -28,7 +27,6 @@ namespace HogentVmPortal.Controllers
         public VirtualMachineController(IVirtualMachineRepository virtualMachineRepository,
             IVirtualMachineTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
-            IVirtualMachineRequestRepository virtualMachineRequestRepository,
             ICourseRepository courseRepository,
             IOptions<ProxmoxSshConfig> sshConfig,
             VirtualMachineApiService vmApiService)
@@ -36,7 +34,6 @@ namespace HogentVmPortal.Controllers
             _vmRepository = virtualMachineRepository;
             _vmTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
-            _vmRequestRepository = virtualMachineRequestRepository;
             _courseRepository = courseRepository;
 
             _proxmoxSshConfig = sshConfig.Value;

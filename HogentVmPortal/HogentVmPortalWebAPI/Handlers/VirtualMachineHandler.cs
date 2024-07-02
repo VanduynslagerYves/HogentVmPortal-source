@@ -51,14 +51,6 @@ namespace HogentVmPortalWebAPI.Handlers
                 };
 
                 var vmArgs = ProxmoxVirtualMachineCreateParams.FromViewModel(createRequest);
-                //var vmArgs = new ProxmoxVirtualMachineCreateParams()
-                //{
-                //    Login = createRequest.Login,
-                //    Password = createRequest.Password,
-                //    VmName = createRequest.Name,
-                //    CloneId = createRequest.CloneId,
-                //    SshKey = createRequest.SshKey,
-                //};
 
                 pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value); //TODO: init in base
 
@@ -81,7 +73,7 @@ namespace HogentVmPortalWebAPI.Handlers
                 if (result.Outputs.TryGetValue("login", out var login)) virtualMachine.Login = login.Value.ToString();
 
                 await _virtualMachineRepository.Add(virtualMachine);
-                await _virtualMachineRepository.SaveChangesAsync();
+                //await _virtualMachineRepository.SaveChangesAsync();
             }
             catch (Exception e)
             {
@@ -112,7 +104,7 @@ namespace HogentVmPortalWebAPI.Handlers
                 await stack.Workspace.RemoveStackAsync(removeRequest.Name); //use workspace property to remove the now empty stack
 
                 await _virtualMachineRepository.Delete(removeRequest.VmId);
-                await _virtualMachineRepository.SaveChangesAsync();
+                //await _virtualMachineRepository.SaveChangesAsync();
             }
             catch (Exception e)
             {

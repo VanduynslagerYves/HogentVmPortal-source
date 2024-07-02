@@ -4,6 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HogentVmPortalWebAPI.Data.Repositories
 {
+    public interface IVirtualMachineRepository
+    {
+        Task<List<VirtualMachine>> GetAll(bool includeUsers = false);
+        Task<VirtualMachine> GetById(Guid id, bool includeUsers = false);
+        Task Add(VirtualMachine virtualMachine);
+        Task Update(VirtualMachine virtualMachine);
+        Task Delete(Guid id);
+    }
     public class VirtualMachineRepository : IVirtualMachineRepository
     {
         private readonly ApplicationDbContext _context;
@@ -13,6 +21,25 @@ namespace HogentVmPortalWebAPI.Data.Repositories
         {
             _context = context;
             _virtualMachines = _context.VirtualMachines;
+        }
+
+        public async Task<List<VirtualMachine>> GetAll(bool includeUsers = false)
+        {
+            var virtualMachines = new List<VirtualMachine>();
+
+            if (includeUsers)
+            {
+                virtualMachines = await _virtualMachines
+                    .Include(x => x.Owner)
+                    .ToListAsync();
+            }
+            else
+            {
+                virtualMachines = await _virtualMachines
+                    .ToListAsync();
+            }
+
+            return virtualMachines;
         }
 
         public async Task<VirtualMachine> GetById(Guid id, bool includeUsers = false)
@@ -40,11 +67,13 @@ namespace HogentVmPortalWebAPI.Data.Repositories
         public async Task Add(VirtualMachine virtualMachine)
         {
             await _virtualMachines.AddAsync(virtualMachine);
+            await SaveChangesAsync();
         }
 
-        public void Update(VirtualMachine virtualMachine)
+        public async Task Update(VirtualMachine virtualMachine)
         {
-            _context.Update(virtualMachine);
+            _virtualMachines.Update(virtualMachine);
+            await SaveChangesAsync();
         }
 
         public async Task Delete(Guid id)
@@ -54,9 +83,15 @@ namespace HogentVmPortalWebAPI.Data.Repositories
             if (virtualMachine == null) throw new VirtualMachineNotFoundException(id.ToString());
 
             _virtualMachines.Remove(virtualMachine);
+            await SaveChangesAsync();
         }
 
-        public async Task SaveChangesAsync()
+        public bool VirtualMachineNameExists(string name)
+        {
+            return _virtualMachines.Any(e => e.Name.Equals(name));
+        }
+
+        private async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
         }

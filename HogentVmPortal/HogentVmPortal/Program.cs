@@ -24,9 +24,6 @@ builder.Services.AddScoped<IContainerTemplateRepository, ContainerTemplateReposi
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
-builder.Services.AddScoped<IVirtualMachineRequestRepository, VirtualMachineRequestRepository>();
-builder.Services.AddScoped<IContainerRequestRepository, ContainerRequestRepository>();
-
 builder.Services.Configure<ProxmoxSshConfig>(builder.Configuration.GetSection("ProxmoxSshConfig"));
 
 // Add services to the container.

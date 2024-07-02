@@ -16,7 +16,6 @@ namespace HogentVmPortal.Controllers
     {
         private readonly IContainerRepository _containerRepository;
         private readonly IContainerTemplateRepository _containerTemplateRepository;
-        private readonly IContainerRequestRepository _containerRequestRepository;
         private readonly ICourseRepository _courseRepository;
 
         private readonly IAppUserRepository _appUserRepository;
@@ -28,7 +27,6 @@ namespace HogentVmPortal.Controllers
         public ContainerController(IContainerRepository containerRepository,
             IContainerTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
-            IContainerRequestRepository containerRequestRepository,
             ICourseRepository courseRepository,
             IOptions<ProxmoxSshConfig> sshConfig,
             ContainerApiService containerApiService)
@@ -36,7 +34,6 @@ namespace HogentVmPortal.Controllers
             _containerRepository = containerRepository;
             _containerTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
-            _containerRequestRepository = containerRequestRepository;
             _courseRepository = courseRepository;
 
             _proxmoxSshConfig = sshConfig.Value;
