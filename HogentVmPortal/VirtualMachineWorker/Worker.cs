@@ -1,7 +1,6 @@
 using HogentVmPortal.Shared;
 using Microsoft.Extensions.Options;
 using VirtualMachineWorker.Data.Repositories;
-using VirtualMachineWorker.Models;
 
 namespace VirtualMachineWorker
 {

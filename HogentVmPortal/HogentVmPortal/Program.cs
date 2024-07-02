@@ -3,6 +3,7 @@ using HogentVmPortal.Shared.Model;
 using HogentVmPortal.Data.Repositories;
 using HogentVmPortal.Shared.Data;
 using HogentVmPortal.Shared;
+using HogentVmPortal.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DbContextConnection") ?? throw new InvalidOperationException("Connection string 'DbContextConnection' not found.");
@@ -23,13 +24,14 @@ builder.Services.AddScoped<IContainerTemplateRepository, ContainerTemplateReposi
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
-builder.Services.AddScoped<IVirtualMachineRequestRepository, VirtualMachineRequestRepository>();
-builder.Services.AddScoped<IContainerRequestRepository, ContainerRequestRepository>();
-
 builder.Services.Configure<ProxmoxSshConfig>(builder.Configuration.GetSection("ProxmoxSshConfig"));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
+
+builder.Services.AddTransient<VirtualMachineApiService>();
+builder.Services.AddTransient<ContainerApiService>();
 
 var app = builder.Build();
 

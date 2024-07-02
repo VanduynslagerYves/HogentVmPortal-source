@@ -1,5 +1,6 @@
 ﻿using HogentVmPortal.Data.Repositories;
 using HogentVmPortal.Extensions;
+using HogentVmPortal.Services;
 using HogentVmPortal.Shared;
 using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared.Model;
@@ -15,27 +16,29 @@ namespace HogentVmPortal.Controllers
     {
         private readonly IContainerRepository _containerRepository;
         private readonly IContainerTemplateRepository _containerTemplateRepository;
-        private readonly IContainerRequestRepository _containerRequestRepository;
         private readonly ICourseRepository _courseRepository;
 
         private readonly IAppUserRepository _appUserRepository;
+
+        private readonly ContainerApiService _containerApiService;
 
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
         public ContainerController(IContainerRepository containerRepository,
             IContainerTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
-            IContainerRequestRepository containerRequestRepository,
             ICourseRepository courseRepository,
-            IOptions<ProxmoxSshConfig> sshConfig)
+            IOptions<ProxmoxSshConfig> sshConfig,
+            ContainerApiService containerApiService)
         {
             _containerRepository = containerRepository;
             _containerTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
-            _containerRequestRepository = containerRequestRepository;
             _courseRepository = courseRepository;
 
             _proxmoxSshConfig = sshConfig.Value;
+
+            _containerApiService = containerApiService;
         }
 
         // GET: Container
@@ -61,7 +64,7 @@ namespace HogentVmPortal.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name, Password, SshKey, CloneId")] ContainerCreate containerViewModel)
+        public async Task<IActionResult> Create([Bind("Name, CloneId")] ContainerCreate containerViewModel)
         {
             if (_containerRepository.ContainerNameExists(containerViewModel.Name))
             {
@@ -84,8 +87,9 @@ namespace HogentVmPortal.Controllers
                         CloneId = containerViewModel.CloneId,
                     };
 
-                    await _containerRequestRepository.Add(createRequest);
-                    await _containerRequestRepository.SaveChangesAsync();
+                    //call API
+                    var response = await _containerApiService.CreateContainerAsync(createRequest);
+                    ViewBag.Response = response;
 
                     TempData["Message"] = string.Format("Creatie van container {0} is in behandeling", createRequest.Name);
                     return RedirectToAction(nameof(Index));
@@ -138,7 +142,7 @@ namespace HogentVmPortal.Controllers
             {
                 var container = await _containerRepository.GetById(id);
 
-                var request = new ContainerRemoveRequest
+                var removeRequest = new ContainerRemoveRequest
                 {
                     Id = Guid.NewGuid(),
                     TimeStamp = DateTime.UtcNow,
@@ -146,8 +150,9 @@ namespace HogentVmPortal.Controllers
                     VmId = container.Id,
                 };
 
-                await _containerRequestRepository.Add(request);
-                await _containerRequestRepository.SaveChangesAsync();
+                //call API
+                var response = await _containerApiService.RemoveContainerAsync(removeRequest);
+                ViewBag.Response = response;
 
                 TempData["Message"] = string.Format("Verwijderen van container {0} is in behandeling", container.Name);
             }

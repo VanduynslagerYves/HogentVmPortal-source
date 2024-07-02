@@ -26,12 +26,6 @@ public class ApplicationDbContext : IdentityDbContext<HogentUser>
     public DbSet<HogentUser> HogentUsers { get; set; }
     public DbSet<Course> Courses { get; set; }
 
-    public DbSet<VirtualMachineCreateRequest> VirtualMachineCreateRequests { get; set; }
-    public DbSet<VirtualMachineRemoveRequest> VirtualMachineRemoveRequests { get; set; }
-
-    public DbSet<ContainerCreateRequest> ContainerCreateRequests { get; set; }
-    public DbSet<ContainerRemoveRequest> ContainerRemoveRequests { get; set; }
-
     //Most of these mappings are handled implicitely and are not needed
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -44,12 +38,6 @@ public class ApplicationDbContext : IdentityDbContext<HogentUser>
 
         builder.Entity<HogentUser>(MapHogentUser);
         builder.Entity<Course>(MapCourse);
-
-        builder.Entity<VirtualMachineCreateRequest>(MapVmCreateRequest);
-        builder.Entity<VirtualMachineRemoveRequest>(MapVmRemoveRequest);
-
-        builder.Entity<ContainerCreateRequest>(MapContainerCreateRequest);
-        builder.Entity<ContainerRemoveRequest>(MapContainerRemoveRequest);
     }
 
     public static void MapVirtualMachine(EntityTypeBuilder<VirtualMachine> vmBuilder)
@@ -132,54 +120,5 @@ public class ApplicationDbContext : IdentityDbContext<HogentUser>
         courseBuilder.HasMany(x => x.Students).WithMany(x => x.Courses);
         courseBuilder.HasMany(x => x.VirtualMachineTemplates).WithMany(x => x.Courses);
         courseBuilder.HasMany(x => x.ContainerTemplates).WithMany(x => x.Courses);
-    }
-
-    public static void MapVmCreateRequest(EntityTypeBuilder<VirtualMachineCreateRequest> vmCreateBuilder)
-    {
-        vmCreateBuilder.ToTable("VirtualMachineCreateRequest");
-
-        vmCreateBuilder.HasKey(x => x.Id);
-
-        vmCreateBuilder.Property(x => x.Name).IsRequired();
-        vmCreateBuilder.Property(x => x.TimeStamp).IsRequired();
-        vmCreateBuilder.Property(x => x.OwnerId).IsRequired();
-        vmCreateBuilder.Property(x => x.Login).IsRequired();
-        vmCreateBuilder.Property(x => x.Password).IsRequired();
-        vmCreateBuilder.Property(x => x.SshKey).IsRequired();
-        vmCreateBuilder.Property(x => x.CloneId).IsRequired();
-    }
-
-    public static void MapVmRemoveRequest(EntityTypeBuilder<VirtualMachineRemoveRequest> vmRemoveBuilder)
-    {
-        vmRemoveBuilder.ToTable("VirtualMachineRemoveRequest");
-
-        vmRemoveBuilder.HasKey(x => x.Id);
-
-        vmRemoveBuilder.Property(x => x.VmId).IsRequired();
-        vmRemoveBuilder.Property(x => x.Name).IsRequired();
-        vmRemoveBuilder.Property(x => x.TimeStamp).IsRequired();
-    }
-
-    public static void MapContainerCreateRequest(EntityTypeBuilder<ContainerCreateRequest> containerCreateBuilder)
-    {
-        containerCreateBuilder.ToTable("ContainerCreateRequest");
-
-        containerCreateBuilder.HasKey(x => x.Id);
-
-        containerCreateBuilder.Property(x => x.Name).IsRequired();
-        containerCreateBuilder.Property(x => x.TimeStamp).IsRequired();
-        containerCreateBuilder.Property(x => x.OwnerId).IsRequired();
-        containerCreateBuilder.Property(x => x.CloneId).IsRequired();
-    }
-
-    public static void MapContainerRemoveRequest(EntityTypeBuilder<ContainerRemoveRequest> containerRemoveBuilder)
-    {
-        containerRemoveBuilder.ToTable("ContainerRemoveRequest");
-
-        containerRemoveBuilder.HasKey(x => x.Id);
-
-        containerRemoveBuilder.Property(x => x.VmId).IsRequired();
-        containerRemoveBuilder.Property(x => x.Name).IsRequired();
-        containerRemoveBuilder.Property(x => x.TimeStamp).IsRequired();
     }
 }

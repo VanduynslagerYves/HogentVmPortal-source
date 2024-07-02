@@ -13,7 +13,7 @@ namespace VirtualMachineWorker
             createRequests = createRequests.OrderBy(x => x.TimeStamp).ToList();
             if (!createRequests.Any()) return;
 
-            ProviderStrategy? pulumiProvider;
+            ProviderStrategy? pulumiProvider; //TODO: init in Worker
             foreach (var createRequest in createRequests)
             {
                 try
@@ -38,7 +38,7 @@ namespace VirtualMachineWorker
                         SshKey = createRequest.SshKey,
                     };
 
-                    pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
+                    pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value); //TODO: init in Worker
 
                     var projectName = "pulumi_inline";
                     var stackName = vmArgs.VmName;

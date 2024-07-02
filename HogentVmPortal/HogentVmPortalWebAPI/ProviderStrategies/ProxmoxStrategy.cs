@@ -1,6 +1,6 @@
 ﻿using HogentVmPortal.Shared;
 
-namespace VirtualMachineWorker.PulumiStrategy
+namespace HogentVmPortalWebAPI.ProviderStrategies
 {
     public partial class ProxmoxStrategy : ProviderStrategy
     {

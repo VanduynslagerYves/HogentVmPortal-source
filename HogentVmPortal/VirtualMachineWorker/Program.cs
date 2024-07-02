@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using HogentVmPortal.Shared.Data;
 using VirtualMachineWorker;
 using VirtualMachineWorker.Data.Repositories;
-using VirtualMachineWorker.Models;
 using HogentVmPortal.Shared;
 
 IHost host = Host.CreateDefaultBuilder(args)
