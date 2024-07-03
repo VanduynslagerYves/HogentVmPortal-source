@@ -41,14 +41,6 @@ namespace HogentVmPortalWebAPI.Handlers
                 var owner = await _appUserRepository.GetById(createRequest.OwnerId);
                 var template = await _containerTemplateRepository.GetByCloneId(createRequest.CloneId);
 
-                var container = new Container
-                {
-                    Id = Guid.NewGuid(),
-                    Name = createRequest.Name,
-                    Owner = owner,
-                    Template = template,
-                };
-
                 var vmArgs = ProxmoxContainerCreateParams.FromViewModel(createRequest);
 
                 pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
@@ -60,24 +52,33 @@ namespace HogentVmPortalWebAPI.Handlers
                 var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiFn);
                 var stack = await LocalWorkspace.CreateOrSelectStackAsync(stackArgs);
 
-                //var result = await Task.Run(() => stack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine, ShowSecrets = true }));
                 //Provision the container
                 var result = await stack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine });
 
-                //Add extra data to the container object once it is provisioned.
-                if (result.Outputs.TryGetValue("id", out var proxmoxId))
+                var proxmoxId = int.Parse(GetValue(result, "id", value => value.ToString())!);
+                var ip = await GetIpForContainerId(proxmoxId);
+
+                var container = new Container
                 {
-                    container.ProxmoxId = int.Parse(proxmoxId.Value.ToString()!);
-                    container.IpAddress = await GetIpForContainerId(container.ProxmoxId!.Value);
-                }
+                    Id = Guid.NewGuid(),
+                    Name = createRequest.Name,
+                    Owner = owner,
+                    Template = template,
+                    ProxmoxId = proxmoxId,
+                    IpAddress = ip
+                };
 
                 await _containerRepository.Add(container);
-                await _containerRepository.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
+        }
+
+        private static T? GetValue<T>(UpResult? result, string key, Func<object, T> convertFunc)
+        {
+            return result != null && result.Outputs.TryGetValue(key, out var outputValue) ? convertFunc(outputValue.Value) : default;
         }
 
         public async Task HandleContainerRemoveRequest(ContainerRemoveRequest removeRequest)
@@ -103,7 +104,6 @@ namespace HogentVmPortalWebAPI.Handlers
                 await stack.Workspace.RemoveStackAsync(removeRequest.Name); //use workspace property to remove the now empty stack
 
                 await _containerRepository.Delete(removeRequest.VmId);
-                await _containerRepository.SaveChangesAsync();
             }
             catch (Exception e)
             {

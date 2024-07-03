@@ -4,6 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HogentVmPortal.Data.Repositories
 {
+    public interface IContainerRepository
+    {
+        public Task<Container> GetById(Guid id, bool includeUsers = false);
+        public bool ContainerNameExists(string name);
+    }
+
     public class ContainerRepository : IContainerRepository
     {
         private readonly ApplicationDbContext _context;
@@ -13,25 +19,6 @@ namespace HogentVmPortal.Data.Repositories
         {
             _context = context;
             _containers = _context.Containers;
-        }
-
-        public async Task<List<Container>> GetAll(bool includeUsers = false)
-        {
-            var containers = new List<Container>();
-
-            if (includeUsers)
-            {
-                containers = await _containers
-                    .Include(x => x.Owner)
-                    .ToListAsync();
-            }
-            else
-            {
-                containers = await _containers
-                    .ToListAsync();
-            }
-
-            return containers;
         }
 
         public async Task<Container> GetById(Guid id, bool includeUsers = false)

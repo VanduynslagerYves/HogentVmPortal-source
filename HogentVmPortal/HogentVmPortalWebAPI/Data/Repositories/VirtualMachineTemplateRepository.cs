@@ -4,6 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HogentVmPortalWebAPI.Data.Repositories
 {
+    public interface IVirtualMachineTemplateRepository
+    {
+        Task<VirtualMachineTemplate> GetByCloneId(int id);
+    }
+
     public class VirtualMachineTemplateRepository : IVirtualMachineTemplateRepository
     {
         private readonly ApplicationDbContext _context;

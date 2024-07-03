@@ -1,6 +1,10 @@
 - data fetch via API (later gRPC) instead of straight to db + move repositories to Shared
+   TODO: GetById en Exists via API, GetAll() done
+   TODO: modify DTO's, Owner as DTO and Template as DTO (or just not include Template, not used atm)
+
 - check if queue is absolutely necessary in the service. probably better to work per request if we execute the request on a separate background thread
 	Queue is needed for containers, on cloning the template ct is locked so not possible to clone concurrently.
+
 
 using Blazor server fixes next 2 items (SignalR is baked in):
 (blazor wasm can also use SignalR, but needs to be set up manually, same for data representation)
@@ -9,7 +13,7 @@ using Blazor server fixes next 2 items (SignalR is baked in):
 - front-end: mvc controller and api controlle seperately? fetch data in js
 => use Blazor server
 
-- gRPC instead of REST for HogentVmPortalWebAPI
+-(gRPC instead of REST for HogentVmPortalWebAPI)
 
 - implement authentication for webapp and api('s), check what's best to use
 - check how to work with Cancellationtoken

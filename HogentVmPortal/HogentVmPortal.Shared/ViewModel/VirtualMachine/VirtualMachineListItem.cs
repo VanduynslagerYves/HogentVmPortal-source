@@ -1,20 +1,22 @@
-﻿using HogentVmPortal.Shared.Model;
+﻿using HogentVmPortal.Shared.DTO;
 
 namespace HogentVmPortal.Shared.ViewModel
 {
-    public class VirtualMachineListItem : ViewModelBase<VirtualMachineListItem, VirtualMachine>
+    public class VirtualMachineListItem : ViewModelBase<VirtualMachineListItem, VirtualMachineDTO>
     {
-        public Guid Id { get; private set; }
-        public int? ProxmoxId { get; private set; }
-        public string? Name { get; private set; }
-        public string? IpAddress { get; private set; }
-        public string? Login { get; private set; }
-        public string? OwnerName { get; private set; }
-        public string? OwnerEmail { get; private set; }
-        public string? OwnerId { get; private set; }
+        public required Guid Id { get; set; }
+        public required int ProxmoxId { get; set; }
+        public required string Name { get; set; }
+        public required string IpAddress { get; set; }
+        public required string Login { get; set; }
+        public required string OwnerName { get; set; }
+        public required string OwnerEmail { get; set; }
+        public required string OwnerId { get; set; }
 
-        public static VirtualMachineListItem ToViewModel(VirtualMachine virtualMachine)
+        public static VirtualMachineListItem ToViewModel(VirtualMachineDTO virtualMachine)
         {
+            if(virtualMachine == null) throw new ArgumentNullException(nameof(virtualMachine));
+
             return new VirtualMachineListItem
             {
                 Id = virtualMachine.Id,
@@ -22,14 +24,15 @@ namespace HogentVmPortal.Shared.ViewModel
                 IpAddress = virtualMachine.IpAddress,
                 Name = virtualMachine.Name,
                 Login = virtualMachine.Login,
-                OwnerName = virtualMachine.Owner.UserName,
-                OwnerEmail = virtualMachine.Owner.Email,
-                OwnerId = virtualMachine.Owner.Id,
+                OwnerName = virtualMachine.OwnerName,
+                OwnerEmail = virtualMachine.OwnerEmail,
+                OwnerId = virtualMachine.OwnerId,
             };
         }
 
-        public static List<VirtualMachineListItem> ToViewModel(List<VirtualMachine> virtualMachines)
+        public static List<VirtualMachineListItem> ToViewModel(List<VirtualMachineDTO> virtualMachines)
         {
+            if(virtualMachines == null) throw new ArgumentNullException(nameof (virtualMachines));
             return virtualMachines.Select(ToViewModel).ToList();
         }
     }

@@ -4,6 +4,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HogentVmPortal.Data.Repositories
 {
+    public interface ICourseRepository
+    {
+        Task Add(Course course);
+        Task Delete(Guid id);
+        void Delete(Course course);
+        Task<Course> GetById(Guid id);
+        Task<List<Course>> GetAll();
+        void Update(Course course);
+        Task SaveChangesAsync();
+        bool CourseNameExists(string name);
+    }
+
     public class CourseRepository : ICourseRepository
     {
         private readonly ApplicationDbContext _context;

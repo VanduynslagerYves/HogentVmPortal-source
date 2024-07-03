@@ -4,6 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HogentVmPortal.Data.Repositories
 {
+    public interface IVirtualMachineRepository
+    {
+        public Task<VirtualMachine> GetById(Guid id, bool includeUsers = false);
+        public bool VirtualMachineNameExists(string name);
+    }
+
     public class VirtualMachineRepository : IVirtualMachineRepository
     {
         private readonly ApplicationDbContext _context;
@@ -13,25 +19,6 @@ namespace HogentVmPortal.Data.Repositories
         {
             _context = context;
             _virtualMachines = _context.VirtualMachines;
-        }
-
-        public async Task<List<VirtualMachine>> GetAll(bool includeUsers = false)
-        {
-            var virtualMachines = new List<VirtualMachine>();
-
-            if (includeUsers)
-            {
-                virtualMachines = await _virtualMachines
-                    .Include(x => x.Owner)
-                    .ToListAsync();
-            }
-            else
-            {
-                virtualMachines = await _virtualMachines
-                    .ToListAsync();
-            }
-
-            return virtualMachines;
         }
 
         public async Task<VirtualMachine> GetById(Guid id, bool includeUsers = false)
