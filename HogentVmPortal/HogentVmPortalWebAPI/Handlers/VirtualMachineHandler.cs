@@ -24,10 +24,6 @@ namespace HogentVmPortalWebAPI.Handlers
             _proxmoxConfig = proxmoxConfig;
         }
 
-        /* Rework with webapi and event-based dequeue:
-         * no polling of db every 5sec
-         * Handler code will only be executed if there's a request in the queue (event-based)
-         */
         public async Task HandleVirtualMachineCreateRequest(VirtualMachineCreateRequest createRequest)
         {
             if (createRequest == null) return;
@@ -42,14 +38,6 @@ namespace HogentVmPortalWebAPI.Handlers
                 var owner = await _appUserRepository.GetById(createRequest.OwnerId);
                 var template = await _virtualMachineTemplateRepository.GetByCloneId(createRequest.CloneId);
 
-                var virtualMachine = new VirtualMachine
-                {
-                    Id = Guid.NewGuid(),
-                    Name = createRequest.Name,
-                    Owner = owner,
-                    Template = template,
-                };
-
                 var vmArgs = ProxmoxVirtualMachineCreateParams.FromViewModel(createRequest);
 
                 pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value); //TODO: init in base
@@ -61,24 +49,31 @@ namespace HogentVmPortalWebAPI.Handlers
                 var stackArgs = new InlineProgramArgs(projectName, stackName, pulumiFn);
                 var stack = await LocalWorkspace.CreateOrSelectStackAsync(stackArgs);
 
-                //use Task.Run if the method called is CPU bound (work is done in a separate background thread)
-                //var result = await Task.Run(() => stack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine, ShowSecrets = true }));
                 //Provision the virtual machine
                 var result = await stack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine, ShowSecrets = true });
 
-                //Add extra data to the virtual machine object once it is provisioned.
-                //TODO: look for a way to get the ip from Pulumi state (cloud)
-                if (result.Outputs.TryGetValue("ip", out var ip)) virtualMachine.IpAddress = ip.Value.ToString();
-                if (result.Outputs.TryGetValue("id", out var proxmoxId)) virtualMachine.ProxmoxId = int.Parse(proxmoxId.Value.ToString()!);
-                if (result.Outputs.TryGetValue("login", out var login)) virtualMachine.Login = login.Value.ToString();
+                var virtualMachine = new VirtualMachine
+                {
+                    Id = Guid.NewGuid(),
+                    Name = createRequest.Name,
+                    Owner = owner,
+                    Template = template,
+                    IpAddress = GetValue(result, "ip", value => value.ToString()) ?? string.Empty,
+                    ProxmoxId = GetValue(result, "id", value => int.Parse(value.ToString()!)),
+                    Login = GetValue(result, "login", value => value.ToString()) ?? string.Empty
+                };
 
                 await _virtualMachineRepository.Add(virtualMachine);
-                //await _virtualMachineRepository.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
+        }
+
+        private static T? GetValue<T>(UpResult? result, string key, Func<object, T> convertFunc)
+        {
+            return result != null && result.Outputs.TryGetValue(key, out var outputValue) ? convertFunc(outputValue.Value) : default;
         }
 
         public async Task HandleVirtualMachineRemoveRequest(VirtualMachineRemoveRequest removeRequest)
@@ -104,7 +99,6 @@ namespace HogentVmPortalWebAPI.Handlers
                 await stack.Workspace.RemoveStackAsync(removeRequest.Name); //use workspace property to remove the now empty stack
 
                 await _virtualMachineRepository.Delete(removeRequest.VmId);
-                //await _virtualMachineRepository.SaveChangesAsync();
             }
             catch (Exception e)
             {

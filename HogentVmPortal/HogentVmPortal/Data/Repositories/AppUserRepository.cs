@@ -4,6 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HogentVmPortal.Data.Repositories
 {
+    public interface IAppUserRepository
+    {
+        public Task<List<HogentUser>> GetAll();
+        public Task<HogentUser> GetById(string id);
+    }
+
     public class AppUserRepository : IAppUserRepository
     {
         private readonly DbSet<HogentUser> _appUsers;

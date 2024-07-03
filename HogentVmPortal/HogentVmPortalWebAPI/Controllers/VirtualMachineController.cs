@@ -1,4 +1,5 @@
 ﻿using HogentVmPortal.Shared.DTO;
+using HogentVmPortalWebAPI.Data.Repositories;
 using HogentVmPortalWebAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
@@ -10,14 +11,17 @@ namespace HogentVmPortalWebAPI.Controllers
     public class VirtualMachineController : ControllerBase
     {
         private readonly ILogger<VirtualMachineController> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+
+        private readonly IVirtualMachineRepository _vmRepository;
 
         private static ConcurrentDictionary<string, string> _taskStatuses = new ConcurrentDictionary<string, string>();
 
-        public VirtualMachineController(ILogger<VirtualMachineController> logger, IServiceProvider serviceProvider)
+        public VirtualMachineController(ILogger<VirtualMachineController> logger, IServiceScopeFactory serviceScopeFactory, IVirtualMachineRepository vmRepository)
         {
             _logger = logger;
-            _serviceProvider = serviceProvider;
+            _serviceScopeFactory = serviceScopeFactory;
+            _vmRepository = vmRepository;
         }
 
         [HttpPost("create")]
@@ -66,6 +70,23 @@ namespace HogentVmPortalWebAPI.Controllers
             return Accepted(new { TaskId = taskId });
         }
 
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll(bool includeUsers = false)
+        {
+            var vms = await _vmRepository.GetAll(includeUsers);
+
+            return Ok(vms);
+        }
+
+        //TODO: mapping to DTO
+        [HttpGet("id")]
+        public async Task<IActionResult> GetById(Guid id, bool includeUsers = false)
+        {
+            var result = await _vmRepository.GetById(id, includeUsers);
+
+            return Ok(result);
+        }
+
         [HttpGet("status/{taskId}")]
         public IActionResult GetStatus(string taskId)
         {
@@ -77,7 +98,6 @@ namespace HogentVmPortalWebAPI.Controllers
             return NotFound(new { TaskId = taskId, Status = "Not Found" });
         }
 
-        //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
         private async Task ProcessCreateRequestAsync(VirtualMachineCreateRequest request, string taskId)
         {
             try
@@ -85,14 +105,8 @@ namespace HogentVmPortalWebAPI.Controllers
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
-                // Resolve VirtualMachineHandler through DI (without the need of an HTTP context)
-                //using(var scope = _scopeFactory.CreateScope())
-                //{
-                //    var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
-                //    await handler.HandleVirtualMachineCreateRequest(request);
-                //}
-
-                using (var scope = _serviceProvider.CreateScope())
+                //This task will be executed in a background thread: we need to create a new scope for the handler, so dependencies for the handler can be correctly resolved with DI
+                using (var scope = _serviceScopeFactory.CreateAsyncScope())
                 {
                     var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
                     await handler.HandleVirtualMachineCreateRequest(request);
@@ -104,11 +118,10 @@ namespace HogentVmPortalWebAPI.Controllers
             catch (Exception)
             {
                 _taskStatuses[taskId] = "Failed";
-                _logger.LogInformation("Failed task {taskId}", taskId);
+                _logger.LogError("Failed task {taskId}", taskId);
             }
         }
 
-        //This task will be saved in a queue, so we need to create a new scope for each task, so dependencies for the task can be correctly resolved with DI
         private async Task ProcessRemoveRequestAsync(VirtualMachineRemoveRequest request, string taskId)
         {
             try
@@ -116,8 +129,8 @@ namespace HogentVmPortalWebAPI.Controllers
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
-                // Resolve VirtualMachineHandler through DI (without the need of an HTTP context)
-                using (var scope = _serviceProvider.CreateScope())
+                //This task will be executed in a background thread: we need to create a new scope for the handler, so dependencies for the handler can be correctly resolved with DI
+                using (var scope = _serviceScopeFactory.CreateAsyncScope())
                 {
                     var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
                     await handler.HandleVirtualMachineRemoveRequest(request);
@@ -129,7 +142,7 @@ namespace HogentVmPortalWebAPI.Controllers
             catch (Exception)
             {
                 _taskStatuses[taskId] = "Failed";
-                _logger.LogInformation("Failed task {taskId}", taskId);
+                _logger.LogError("Failed task {taskId}", taskId);
             }
         }
     }

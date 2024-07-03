@@ -14,23 +14,28 @@ namespace HogentVmPortal.Controllers
 {
     public class ContainerController : Controller
     {
+        private readonly ILogger<ContainerController> _logger;
+
         private readonly IContainerRepository _containerRepository;
         private readonly IContainerTemplateRepository _containerTemplateRepository;
         private readonly ICourseRepository _courseRepository;
 
         private readonly IAppUserRepository _appUserRepository;
 
-        private readonly ContainerApiService _containerApiService;
+        private readonly ContainerApiService _ctApiService;
 
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
-        public ContainerController(IContainerRepository containerRepository,
+        public ContainerController(ILogger<ContainerController> logger,
+            IContainerRepository containerRepository,
             IContainerTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
             ICourseRepository courseRepository,
             IOptions<ProxmoxSshConfig> sshConfig,
-            ContainerApiService containerApiService)
+            ContainerApiService ctApiService)
         {
+            _logger = logger;
+
             _containerRepository = containerRepository;
             _containerTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
@@ -38,7 +43,7 @@ namespace HogentVmPortal.Controllers
 
             _proxmoxSshConfig = sshConfig.Value;
 
-            _containerApiService = containerApiService;
+            _ctApiService = ctApiService;
         }
 
         // GET: Container
@@ -46,10 +51,28 @@ namespace HogentVmPortal.Controllers
         {
             var currentUserId = User.GetId();
 
-            var containers = await _containerRepository.GetAll(includeUsers: true);
-            containers = !string.IsNullOrEmpty(currentUserId) ? containers.Where(v => v.Owner.Id == currentUserId).ToList() : new List<Container>();
+            try
+            {
+                var containerDTOs = await _ctApiService.GetAll(includeUsers: true);
+                containerDTOs = (containerDTOs != null && !string.IsNullOrEmpty(currentUserId)) ? containerDTOs.Where(v => v.OwnerId == currentUserId).ToList() : new List<ContainerDTO>();
 
-            return View(ContainerListItem.ToViewModel(containers));
+                var ctListItems = ContainerListItem.ToViewModel(containerDTOs);
+
+                return View(ctListItems);
+            }
+            catch (HttpRequestException ex)
+            {
+                TempData["Error"] = ex.Message;
+                _logger.LogError(ex.Message);
+
+                return View(new List<VirtualMachineListItem>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+
+                return View(new List<VirtualMachineListItem>());
+            }
         }
 
         // GET: Container/Create
@@ -88,7 +111,7 @@ namespace HogentVmPortal.Controllers
                     };
 
                     //call API
-                    var response = await _containerApiService.CreateContainerAsync(createRequest);
+                    var response = await _ctApiService.CreateContainerAsync(createRequest);
                     ViewBag.Response = response;
 
                     TempData["Message"] = string.Format("Creatie van container {0} is in behandeling", createRequest.Name);
@@ -151,7 +174,7 @@ namespace HogentVmPortal.Controllers
                 };
 
                 //call API
-                var response = await _containerApiService.RemoveContainerAsync(removeRequest);
+                var response = await _ctApiService.RemoveContainerAsync(removeRequest);
                 ViewBag.Response = response;
 
                 TempData["Message"] = string.Format("Verwijderen van container {0} is in behandeling", container.Name);

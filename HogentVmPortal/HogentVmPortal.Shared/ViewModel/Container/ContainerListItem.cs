@@ -1,33 +1,36 @@
-﻿using HogentVmPortal.Shared.Model;
+﻿using HogentVmPortal.Shared.DTO;
 
 namespace HogentVmPortal.Shared.ViewModel
 {
-    public class ContainerListItem : ViewModelBase<ContainerListItem, Container>
+    public class ContainerListItem : ViewModelBase<ContainerListItem, ContainerDTO>
     {
-        public Guid Id { get; private set; }
-        public int? ProxmoxId { get; private set; }
-        public string? Name { get; private set; }
-        public string? IpAddress { get; private set; }
-        public string? OwnerName { get; private set; }
-        public string? OwnerEmail { get; private set; }
-        public string? OwnerId { get; private set; }
+        public required Guid Id { get; set; }
+        public required int ProxmoxId { get; set; }
+        public required string Name { get; set; }
+        public required string IpAddress { get; set; }
+        public required string OwnerName { get; set; }
+        public required string OwnerEmail { get; set; }
+        public required string OwnerId { get; set; }
 
-        public static ContainerListItem ToViewModel(Container container)
+        public static ContainerListItem ToViewModel(ContainerDTO container)
         {
+            if(container == null) throw new ArgumentNullException(nameof(container));
+
             return new ContainerListItem
             {
                 Id = container.Id,
                 ProxmoxId = container.ProxmoxId,
                 IpAddress = container.IpAddress,
                 Name = container.Name,
-                OwnerName = container.Owner.UserName,
-                OwnerEmail = container.Owner.Email,
-                OwnerId = container.Owner.Id,
+                OwnerName = container.OwnerName,
+                OwnerEmail = container.OwnerEmail,
+                OwnerId = container.OwnerId,
             };
         }
 
-        public static List<ContainerListItem> ToViewModel(List<Container> containers)
+        public static List<ContainerListItem> ToViewModel(List<ContainerDTO> containers)
         {
+            if (containers == null) throw new ArgumentNullException(nameof(containers));
             return containers.Select(ToViewModel).ToList();
         }
     }

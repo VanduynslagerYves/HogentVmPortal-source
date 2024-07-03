@@ -1,4 +1,5 @@
 ﻿using HogentVmPortal.Shared.DTO;
+using HogentVmPortalWebAPI.Data.Repositories;
 using HogentVmPortalWebAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
@@ -10,14 +11,17 @@ namespace HogentVmPortalWebAPI.Controllers
     public class ContainerController : ControllerBase
     {
         private readonly ILogger<ContainerController> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+
+        private readonly IContainerRepository _ctRepository;
 
         private static ConcurrentDictionary<string, string> _taskStatuses = new ConcurrentDictionary<string, string>();
 
-        public ContainerController(ILogger<ContainerController> logger, IServiceProvider serviceProvider)
+        public ContainerController(ILogger<ContainerController> logger, IServiceScopeFactory serviceScopeFactory, IContainerRepository ctRepository)
         {
             _logger = logger;
-            _serviceProvider = serviceProvider;
+            _serviceScopeFactory = serviceScopeFactory;
+            _ctRepository = ctRepository;
         }
 
         [HttpPost("create")]
@@ -51,6 +55,23 @@ namespace HogentVmPortalWebAPI.Controllers
             return Accepted(new { TaskId = taskId });
         }
 
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll(bool includeUsers = false)
+        {
+            var cts = await _ctRepository.GetAll(includeUsers);
+
+            return Ok(cts);
+        }
+
+        //TODO: mapping to DTO
+        [HttpGet("id")]
+        public async Task<IActionResult> GetById(Guid id, bool includeUsers = false)
+        {
+            var result = await _ctRepository.GetById(id, includeUsers);
+
+            return Ok(result);
+        }
+
         [HttpGet("status/{taskId}")]
         public IActionResult GetStatus(string taskId)
         {
@@ -70,7 +91,7 @@ namespace HogentVmPortalWebAPI.Controllers
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
-                using (var scope = _serviceProvider.CreateScope())
+                using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var handler = scope.ServiceProvider.GetRequiredService<ContainerHandler>();
                     await handler.HandleContainerCreateRequest(request);
@@ -82,7 +103,7 @@ namespace HogentVmPortalWebAPI.Controllers
             catch (Exception)
             {
                 _taskStatuses[taskId] = "Failed";
-                _logger.LogInformation("Failed task {taskId}", taskId);
+                _logger.LogError("Failed task {taskId}", taskId);
             }
         }
 
@@ -94,7 +115,7 @@ namespace HogentVmPortalWebAPI.Controllers
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
-                using (var scope = _serviceProvider.CreateScope())
+                using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var handler = scope.ServiceProvider.GetRequiredService<ContainerHandler>();
                     await handler.HandleContainerRemoveRequest(request);
@@ -106,7 +127,7 @@ namespace HogentVmPortalWebAPI.Controllers
             catch (Exception)
             {
                 _taskStatuses[taskId] = "Failed";
-                _logger.LogInformation("Failed task {taskId}", taskId);
+                _logger.LogError("Failed task {taskId}", taskId);
             }
         }
     }

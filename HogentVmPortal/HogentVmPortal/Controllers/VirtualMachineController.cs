@@ -14,6 +14,8 @@ namespace HogentVmPortal.Controllers
 {
     public class VirtualMachineController : Controller
     {
+        private readonly ILogger<VirtualMachineController> _logger;
+
         private readonly IVirtualMachineRepository _vmRepository;
         private readonly IVirtualMachineTemplateRepository _vmTemplateRepository;
         private readonly ICourseRepository _courseRepository;
@@ -24,13 +26,16 @@ namespace HogentVmPortal.Controllers
 
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
-        public VirtualMachineController(IVirtualMachineRepository virtualMachineRepository,
+        public VirtualMachineController(ILogger<VirtualMachineController> logger,
+            IVirtualMachineRepository virtualMachineRepository,
             IVirtualMachineTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
             ICourseRepository courseRepository,
             IOptions<ProxmoxSshConfig> sshConfig,
             VirtualMachineApiService vmApiService)
         {
+            _logger = logger;
+
             _vmRepository = virtualMachineRepository;
             _vmTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
@@ -46,10 +51,28 @@ namespace HogentVmPortal.Controllers
         {
             var currentUserId = User.GetId();
 
-            var virtualMachines = await _vmRepository.GetAll(includeUsers: true);
-            virtualMachines = !string.IsNullOrEmpty(currentUserId) ? virtualMachines.Where(v => v.Owner.Id == currentUserId).ToList() : new List<VirtualMachine>();
+            try
+            {
+                var virtualMachineDTOs = await _vmApiService.GetAll(includeUsers: true);
+                virtualMachineDTOs = (virtualMachineDTOs != null && !string.IsNullOrEmpty(currentUserId)) ? virtualMachineDTOs.Where(v => v.OwnerId == currentUserId).ToList() : new List<VirtualMachineDTO>();
 
-            return View(VirtualMachineListItem.ToViewModel(virtualMachines));
+                var vmListItems = VirtualMachineListItem.ToViewModel(virtualMachineDTOs);
+
+                return View(vmListItems);
+            }
+            catch (HttpRequestException ex)
+            {
+                TempData["Error"] = ex.Message;
+                _logger.LogError(ex.Message);
+
+                return View(new List<VirtualMachineListItem>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+
+                return View(new List<VirtualMachineListItem>());
+            }
         }
 
         // GET: VirtualMachine/Create
@@ -163,6 +186,11 @@ namespace HogentVmPortal.Controllers
                 TempData["Message"] = string.Format("Verwijderen van VM {0} is in behandeling", virtualMachine.Name);
             }
             catch (VirtualMachineNotFoundException e)
+            {
+                TempData["Error"] = e.Message;
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e)
             {
                 TempData["Error"] = e.Message;
                 return RedirectToAction(nameof(Index));
