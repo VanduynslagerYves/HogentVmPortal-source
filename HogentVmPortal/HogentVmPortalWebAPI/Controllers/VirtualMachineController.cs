@@ -25,6 +25,7 @@ namespace HogentVmPortalWebAPI.Controllers
         }
 
         [HttpPost("create")]
+        [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
         public IActionResult Create(VirtualMachineCreateRequest request)
         {
             if (request == null) return BadRequest("Invalid request data");
@@ -46,10 +47,11 @@ namespace HogentVmPortalWebAPI.Controllers
             //    await ProcessCreateRequestAsync(request, taskId, token);
             //});
 
-            return Accepted(new { TaskId = taskId });
+            return Accepted(new TaskResponse{ TaskId = taskId });
         }
 
         [HttpPost("delete")]
+        [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
         public IActionResult Delete(VirtualMachineRemoveRequest request)
         {
             if (request == null) return BadRequest("Invalid request data");
@@ -67,10 +69,11 @@ namespace HogentVmPortalWebAPI.Controllers
             //    await ProcessRemoveRequestAsync(request, taskId, token);
             //});
 
-            return Accepted(new { TaskId = taskId });
+            return Accepted(new TaskResponse{ TaskId = taskId });
         }
 
         [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<VirtualMachineDTO>), StatusCodes.Status200OK)] //this shows the returned object in the ApiExplorer (e.g. swagger)
         public async Task<IActionResult> GetAll(bool includeUsers = false)
         {
             var vms = await _vmRepository.GetAll(includeUsers);
@@ -80,6 +83,7 @@ namespace HogentVmPortalWebAPI.Controllers
 
         //TODO: mapping to DTO
         [HttpGet("id")]
+        [ProducesResponseType(typeof(VirtualMachineDTO), StatusCodes.Status200OK)] //this shows the returned object in the ApiExplorer (e.g. swagger)
         public async Task<IActionResult> GetById(Guid id, bool includeUsers = false)
         {
             var result = await _vmRepository.GetById(id, includeUsers);
@@ -88,14 +92,15 @@ namespace HogentVmPortalWebAPI.Controllers
         }
 
         [HttpGet("status/{taskId}")]
+        [ProducesResponseType(typeof(StatusResponse), StatusCodes.Status200OK)]
         public IActionResult GetStatus(string taskId)
         {
             if (_taskStatuses.TryGetValue(taskId, out var status))
             {
-                return Ok(new { TaskId = taskId, Status = status });
+                return Ok(new StatusResponse{ TaskId = taskId, Status = status });
             }
 
-            return NotFound(new { TaskId = taskId, Status = "Not Found" });
+            return NotFound(new StatusResponse{ TaskId = taskId, Status = "Not Found" });
         }
 
         private async Task ProcessCreateRequestAsync(VirtualMachineCreateRequest request, string taskId)
