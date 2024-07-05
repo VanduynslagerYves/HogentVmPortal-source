@@ -102,7 +102,7 @@ namespace HogentVmPortal.Controllers
 
                     var createRequest = new VirtualMachineCreateRequest
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Guid.NewGuid(), //Not needed right now, will be needed when the request is saved and passed on to other microservice
                         TimeStamp = DateTime.Now,
                         Name = virtualMachineViewModel.Name,
 
@@ -116,7 +116,7 @@ namespace HogentVmPortal.Controllers
                         SshKey = virtualMachineViewModel.SshKey,
                     };
 
-                    //call API
+                    //call API, TODO: publish data to rabbitMQ and save request in request db
                     var response = await _vmApiService.CreateVmAsync(createRequest);
                     ViewBag.Response = response;
 

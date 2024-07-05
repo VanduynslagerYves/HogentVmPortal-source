@@ -25,11 +25,14 @@ namespace HogentVmPortalWebAPI.Controllers
         }
 
         [HttpPost("create")]
+        [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
         public IActionResult Create(ContainerCreateRequest request)
         {
             if (request == null) return BadRequest("Invalid request data");
 
             var taskId = Guid.NewGuid().ToString();
+
+            //TODO: save request here in db with taskId and status pending 0
 
             //TODO: use queued implementation for creation: template ct is locked during cloning
             Task.Run(async () =>
@@ -37,10 +40,11 @@ namespace HogentVmPortalWebAPI.Controllers
                 await ProcessCreateRequestAsync(request, taskId);
             });
 
-            return Accepted(new { TaskId = taskId });
+            return Accepted(new TaskResponse { TaskId = taskId });
         }
 
         [HttpPost("delete")]
+        [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
         public IActionResult Delete(ContainerRemoveRequest request)
         {
             if (request == null) return BadRequest("Invalid request data");
@@ -52,10 +56,11 @@ namespace HogentVmPortalWebAPI.Controllers
                 await ProcessRemoveRequestAsync(request, taskId);
             });
 
-            return Accepted(new { TaskId = taskId });
+            return Accepted(new TaskResponse { TaskId = taskId });
         }
 
         [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<ContainerDTO>), StatusCodes.Status200OK)] //this shows the returned object in the ApiExplorer (e.g. swagger)
         public async Task<IActionResult> GetAll(bool includeUsers = false)
         {
             var cts = await _ctRepository.GetAll(includeUsers);
@@ -65,6 +70,7 @@ namespace HogentVmPortalWebAPI.Controllers
 
         //TODO: mapping to DTO
         [HttpGet("id")]
+        [ProducesResponseType(typeof(ContainerDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetById(Guid id, bool includeUsers = false)
         {
             var result = await _ctRepository.GetById(id, includeUsers);
@@ -73,14 +79,15 @@ namespace HogentVmPortalWebAPI.Controllers
         }
 
         [HttpGet("status/{taskId}")]
+        [ProducesResponseType(typeof(StatusResponse), StatusCodes.Status200OK)]
         public IActionResult GetStatus(string taskId)
         {
             if (_taskStatuses.TryGetValue(taskId, out var status))
             {
-                return Ok(new { TaskId = taskId, Status = status });
+                return Ok(new StatusResponse { TaskId = taskId, Status = status });
             }
 
-            return NotFound(new { TaskId = taskId, Status = "Not Found" });
+            return NotFound(new StatusResponse { TaskId = taskId, Status = "Not Found" });
         }
 
         //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
@@ -88,6 +95,7 @@ namespace HogentVmPortalWebAPI.Controllers
         {
             try
             {
+                //TODO: update request here in db with the taskId and updated status
                 _taskStatuses[taskId] = "Processing";
                 _logger.LogInformation("Processing task {taskId}", taskId);
 
