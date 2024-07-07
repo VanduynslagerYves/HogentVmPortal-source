@@ -1,4 +1,5 @@
 ﻿using HogentVmPortal.Shared.DTO;
+using HogentVmPortal.Shared.Model;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -69,6 +70,20 @@ namespace HogentVmPortal.Services
             var vms = JsonConvert.DeserializeObject<List<ContainerDTO>>(jsonResponse);
 
             return (vms != null) ? vms : new List<ContainerDTO>();
+        }
+
+        public async Task<ContainerDTO> GetById(Guid id, bool includeUsers = false)
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+
+            var response = await httpClient.GetAsync($"https://localhost:7296/api/container/id?id={id}&includeUsers={includeUsers}");
+            response.EnsureSuccessStatusCode();
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var ct = JsonConvert.DeserializeObject<ContainerDTO>(jsonResponse);
+
+            if (ct == null) throw new ContainerNotFoundException(id.ToString());
+            return ct;
         }
     }
 }

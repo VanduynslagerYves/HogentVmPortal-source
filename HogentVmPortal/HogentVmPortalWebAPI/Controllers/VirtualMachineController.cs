@@ -89,9 +89,9 @@ namespace HogentVmPortalWebAPI.Controllers
         [ProducesResponseType(typeof(IEnumerable<VirtualMachineDTO>), StatusCodes.Status200OK)] //this shows the returned object in the ApiExplorer (e.g. swagger)
         public async Task<IActionResult> GetAll(bool includeUsers = false)
         {
-            var vms = await _vmRepository.GetAll(includeUsers);
+                var vms = await _vmRepository.GetAll(includeUsers);
 
-            return Ok(vms);
+                return Ok(vms);
         }
 
         //TODO: mapping to DTO
@@ -99,9 +99,18 @@ namespace HogentVmPortalWebAPI.Controllers
         [ProducesResponseType(typeof(VirtualMachineDTO), StatusCodes.Status200OK)] //this shows the returned object in the ApiExplorer (e.g. swagger)
         public async Task<IActionResult> GetById(Guid id, bool includeUsers = false)
         {
-            var result = await _vmRepository.GetById(id, includeUsers);
+            try
+            {
+                var result = await _vmRepository.GetById(id, includeUsers);
 
-            return Ok(result);
+                return Ok(result);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+
+            return NotFound(id);
         }
 
         [HttpGet("status/{taskId}")]

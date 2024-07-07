@@ -16,7 +16,6 @@ namespace HogentVmPortal.Controllers
     {
         private readonly ILogger<ContainerController> _logger;
 
-        private readonly IContainerRepository _containerRepository;
         private readonly IContainerTemplateRepository _containerTemplateRepository;
         private readonly ICourseRepository _courseRepository;
 
@@ -27,7 +26,6 @@ namespace HogentVmPortal.Controllers
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
         public ContainerController(ILogger<ContainerController> logger,
-            IContainerRepository containerRepository,
             IContainerTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
             ICourseRepository courseRepository,
@@ -36,7 +34,6 @@ namespace HogentVmPortal.Controllers
         {
             _logger = logger;
 
-            _containerRepository = containerRepository;
             _containerTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
             _courseRepository = courseRepository;
@@ -143,7 +140,7 @@ namespace HogentVmPortal.Controllers
 
             try
             {
-                var container = await _containerRepository.GetById(id);
+                var container = await _ctApiService.GetById(id, includeUsers: true);
                 containerDelete = ContainerDelete.ToViewModel(container);
             }
             catch (ContainerNotFoundException e)
@@ -162,7 +159,7 @@ namespace HogentVmPortal.Controllers
         {
             try
             {
-                var container = await _containerRepository.GetById(id);
+                var container = await _ctApiService.GetById(id, includeUsers: true);
 
                 var removeRequest = new ContainerRemoveRequest
                 {

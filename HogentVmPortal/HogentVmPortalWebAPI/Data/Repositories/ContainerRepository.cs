@@ -2,7 +2,6 @@
 using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared.Model;
 using Microsoft.EntityFrameworkCore;
-using Pulumi.ProxmoxVE.VM;
 
 namespace HogentVmPortalWebAPI.Data.Repositories
 {
@@ -10,7 +9,7 @@ namespace HogentVmPortalWebAPI.Data.Repositories
     {
         Task<bool> NameExistsAsync(string name);
         Task<List<ContainerDTO>> GetAll(bool includeUsers = false);
-        Task<Container> GetById(Guid id, bool includeUsers = false);
+        Task<ContainerDTO> GetById(Guid id, bool includeUsers = false);
         Task Add(Container container);
         void Update(Container container);
         Task Delete(Guid id);
@@ -49,26 +48,30 @@ namespace HogentVmPortalWebAPI.Data.Repositories
         }
 
         //TODO: map to DTO, template non required
-        public async Task<Container> GetById(Guid id, bool includeUsers = false)
+        public async Task<ContainerDTO> GetById(Guid id, bool includeUsers = false)
         {
-            Container? container = null;
+            ContainerDTO? containerDTO = null;
 
             if (includeUsers)
             {
-                container = await _containers
+                var container = await _containers
                     .Include(x => x.Owner)
                     .Include(x => x.Template)
                     .SingleOrDefaultAsync(x => x.Id == id);
+
+                containerDTO = container != null ? Container.ToDTO(container) : null;
             }
             else
             {
-                container = await _containers
+                var container = await _containers
                     .Include(x => x.Template)
                     .SingleOrDefaultAsync(x => x.Id == id);
+
+                containerDTO = container != null ? Container.ToDTO(container) : null;
             }
 
-            if (container == null) throw new ContainerNotFoundException(id.ToString());
-            return container;
+            if (containerDTO == null) throw new ContainerNotFoundException(id.ToString());
+            return containerDTO;
         }
 
         public async Task Add(Container container)
@@ -85,7 +88,7 @@ namespace HogentVmPortalWebAPI.Data.Repositories
 
         public async Task Delete(Guid id)
         {
-            var container = await GetById(id);
+            var container = await _containers.SingleOrDefaultAsync(x => x.Id == id);
 
             if (container == null) throw new ContainerNotFoundException(id.ToString());
 

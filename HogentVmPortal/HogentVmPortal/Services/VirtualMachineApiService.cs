@@ -1,4 +1,5 @@
 ﻿using HogentVmPortal.Shared.DTO;
+using HogentVmPortal.Shared.Model;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -72,6 +73,20 @@ namespace HogentVmPortal.Services
             var vms = JsonConvert.DeserializeObject<List<VirtualMachineDTO>>(jsonResponse);
 
             return (vms != null) ? vms : new List<VirtualMachineDTO>();
+        }
+
+        public async Task<VirtualMachineDTO> GetById(Guid id, bool includeUsers = false)
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+
+            var response = await httpClient.GetAsync($"https://localhost:7296/api/virtualmachine/id?id={id}&includeUsers={includeUsers}");
+            response.EnsureSuccessStatusCode();
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var vm = JsonConvert.DeserializeObject<VirtualMachineDTO>(jsonResponse);
+
+            if (vm == null) throw new VirtualMachineNotFoundException(id.ToString());
+            return vm;
         }
     }
 }

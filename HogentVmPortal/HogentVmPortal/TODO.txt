@@ -1,5 +1,4 @@
 - data fetch via API instead of straight to db + move repositories to Shared
-   TODO: GetById en Exists via API, GetAll() done
    TODO: modify DTO's, Owner as DTO and Template as DTO (or just not include Template, not used atm)
    TODO: Validation - save request to db as VirtualMachine with known properties before deployment and status (Pending, Completed...)
 	validate existing name through all VirtualMachine records

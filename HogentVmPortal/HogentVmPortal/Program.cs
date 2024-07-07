@@ -15,10 +15,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDefaultIdentity<HogentUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
 
-builder.Services.AddScoped<IVirtualMachineRepository, VirtualMachineRepository>();
 builder.Services.AddScoped<IVirtualMachineTemplateRepository, VirtualMachineTemplateRepository>();
-
-builder.Services.AddScoped<IContainerRepository, ContainerRepository>();
 builder.Services.AddScoped<IContainerTemplateRepository, ContainerTemplateRepository>();
 
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();

@@ -16,7 +16,6 @@ namespace HogentVmPortal.Controllers
     {
         private readonly ILogger<VirtualMachineController> _logger;
 
-        private readonly IVirtualMachineRepository _vmRepository;
         private readonly IVirtualMachineTemplateRepository _vmTemplateRepository;
         private readonly ICourseRepository _courseRepository;
 
@@ -27,7 +26,6 @@ namespace HogentVmPortal.Controllers
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
         public VirtualMachineController(ILogger<VirtualMachineController> logger,
-            IVirtualMachineRepository virtualMachineRepository,
             IVirtualMachineTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
             ICourseRepository courseRepository,
@@ -36,7 +34,6 @@ namespace HogentVmPortal.Controllers
         {
             _logger = logger;
 
-            _vmRepository = virtualMachineRepository;
             _vmTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
             _courseRepository = courseRepository;
@@ -149,7 +146,7 @@ namespace HogentVmPortal.Controllers
 
             try
             {
-                var virtualMachine = await _vmRepository.GetById(id);
+                var virtualMachine = await _vmApiService.GetById(id, includeUsers: true);
                 virtualMachineDelete = VirtualMachineDelete.ToViewModel(virtualMachine);
             }
             catch (VirtualMachineNotFoundException e)
@@ -168,7 +165,7 @@ namespace HogentVmPortal.Controllers
         {
             try
             {
-                var virtualMachine = await _vmRepository.GetById(id);
+                var virtualMachine = await _vmApiService.GetById(id, includeUsers: true);
 
                 var removeRequest = new VirtualMachineRemoveRequest
                 {
