@@ -7,7 +7,6 @@ namespace HogentVmPortal.Data.Repositories
     public interface IVirtualMachineRepository
     {
         public Task<VirtualMachine> GetById(Guid id, bool includeUsers = false);
-        public bool VirtualMachineNameExists(string name);
     }
 
     public class VirtualMachineRepository : IVirtualMachineRepository
@@ -41,11 +40,6 @@ namespace HogentVmPortal.Data.Repositories
 
             if (virtualMachine == null) throw new VirtualMachineNotFoundException(id.ToString());
             return virtualMachine;
-        }
-
-        public bool VirtualMachineNameExists(string name)
-        {
-            return _virtualMachines.Any(e => e.Name.Equals(name));
         }
     }
 }

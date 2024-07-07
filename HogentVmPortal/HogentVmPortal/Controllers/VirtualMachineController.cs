@@ -89,7 +89,24 @@ namespace HogentVmPortal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name, Login, Password, SshKey, CloneId")] VirtualMachineCreate virtualMachineViewModel)
         {
-            if (_vmRepository.VirtualMachineNameExists(virtualMachineViewModel.Name))
+            var createRequest = new VirtualMachineCreateRequest
+            {
+                Id = Guid.NewGuid(), //Not needed right now, will be needed when the request is saved and passed on to other microservice
+                TimeStamp = DateTime.Now,
+                Name = virtualMachineViewModel.Name,
+
+                OwnerId = User.GetId(),
+                CloneId = virtualMachineViewModel.CloneId,
+
+                //a full implementation can determine what to do here. auto-generate and send via e-mail?
+                Login = virtualMachineViewModel.Login,
+                Password = virtualMachineViewModel.Password,
+
+                SshKey = virtualMachineViewModel.SshKey,
+            };
+
+            var isValid = await _vmApiService.Validate(createRequest);
+            if (!isValid)
             {
                 ModelState.AddModelError("Name", $"{virtualMachineViewModel.Name} is taken");
             }
@@ -98,24 +115,6 @@ namespace HogentVmPortal.Controllers
             {
                 try
                 {
-                    var currentUserId = User.GetId();
-
-                    var createRequest = new VirtualMachineCreateRequest
-                    {
-                        Id = Guid.NewGuid(), //Not needed right now, will be needed when the request is saved and passed on to other microservice
-                        TimeStamp = DateTime.Now,
-                        Name = virtualMachineViewModel.Name,
-
-                        OwnerId = currentUserId,
-                        CloneId = virtualMachineViewModel.CloneId,
-
-                        //a full implementation can determine what to do here. auto-generate and send via e-mail?
-                        Login = virtualMachineViewModel.Login,
-                        Password = virtualMachineViewModel.Password,
-
-                        SshKey = virtualMachineViewModel.SshKey,
-                    };
-
                     //call API, TODO: publish data to rabbitMQ and save request in request db
                     var response = await _vmApiService.CreateVmAsync(createRequest);
                     ViewBag.Response = response;

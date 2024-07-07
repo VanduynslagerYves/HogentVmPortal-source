@@ -7,6 +7,7 @@ namespace HogentVmPortalWebAPI.Data.Repositories
 {
     public interface IVirtualMachineRepository
     {
+        Task<bool> NameExistsAsync(string name);
         Task<List<VirtualMachineDTO>> GetAll(bool includeUsers = false);
         Task<VirtualMachine> GetById(Guid id, bool includeUsers = false);
         Task Add(VirtualMachine virtualMachine);
@@ -91,9 +92,9 @@ namespace HogentVmPortalWebAPI.Data.Repositories
             await SaveChangesAsync();
         }
 
-        public bool VirtualMachineNameExists(string name)
+        public async Task<bool> NameExistsAsync(string name)
         {
-            return _virtualMachines.Any(e => e.Name.Equals(name));
+            return await _virtualMachines.AnyAsync(e => e.Name.Equals(name));
         }
 
         private async Task SaveChangesAsync()

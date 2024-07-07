@@ -2,11 +2,13 @@
 using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared.Model;
 using Microsoft.EntityFrameworkCore;
+using Pulumi.ProxmoxVE.VM;
 
 namespace HogentVmPortalWebAPI.Data.Repositories
 {
     public interface IContainerRepository
     {
+        Task<bool> NameExistsAsync(string name);
         Task<List<ContainerDTO>> GetAll(bool includeUsers = false);
         Task<Container> GetById(Guid id, bool includeUsers = false);
         Task Add(Container container);
@@ -89,6 +91,11 @@ namespace HogentVmPortalWebAPI.Data.Repositories
 
             _containers.Remove(container);
             await SaveChangesAsync();
+        }
+
+        public async Task<bool> NameExistsAsync(string name)
+        {
+            return await _containers.AnyAsync(e => e.Name.Equals(name));
         }
 
         private async Task SaveChangesAsync()

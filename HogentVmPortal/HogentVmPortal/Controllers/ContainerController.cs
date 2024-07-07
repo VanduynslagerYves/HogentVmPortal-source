@@ -89,7 +89,18 @@ namespace HogentVmPortal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name, CloneId")] ContainerCreate containerViewModel)
         {
-            if (_containerRepository.ContainerNameExists(containerViewModel.Name))
+            var createRequest = new ContainerCreateRequest
+            {
+                Id = Guid.NewGuid(),
+                TimeStamp = DateTime.Now,
+                Name = containerViewModel.Name,
+
+                OwnerId = User.GetId(),
+                CloneId = containerViewModel.CloneId,
+            };
+
+            var isValid = await _ctApiService.Validate(createRequest);
+            if (!isValid)
             {
                 ModelState.AddModelError("Name", $"{containerViewModel.Name} is taken");
             }
@@ -98,18 +109,6 @@ namespace HogentVmPortal.Controllers
             {
                 try
                 {
-                    var currentUserId = User.GetId();
-
-                    var createRequest = new ContainerCreateRequest
-                    {
-                        Id = Guid.NewGuid(),
-                        TimeStamp = DateTime.Now,
-                        Name = containerViewModel.Name,
-
-                        OwnerId = currentUserId,
-                        CloneId = containerViewModel.CloneId,
-                    };
-
                     //call API
                     var response = await _ctApiService.CreateContainerAsync(createRequest);
                     ViewBag.Response = response;

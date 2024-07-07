@@ -1,6 +1,19 @@
-- data fetch via API (later gRPC) instead of straight to db + move repositories to Shared
+- data fetch via API instead of straight to db + move repositories to Shared
    TODO: GetById en Exists via API, GetAll() done
    TODO: modify DTO's, Owner as DTO and Template as DTO (or just not include Template, not used atm)
+   TODO: Validation - save request to db as VirtualMachine with known properties before deployment and status (Pending, Completed...)
+	validate existing name through all VirtualMachine records
+
+- implement RabbitMQ
+Requests MS with ApplicationDbContext for requests. Publish VmRequested, CtRequested
+
+VM en CT microservices with ApplicationDbContext for saved VM's and CT's. 
+Subscribe to VmRequested (prefetch 5) and handle it => Publish VmCreated.
+Subscribe to CtRequested (prefetch 1) and handle it => Publich CtCreated.
+
+Requests MS Subscribe to VmRequested, CtRequested to update Request data with status
+Watch for validation! validate request name only for Pending requests. validate on VirtualMachines
+
 
 - check if queue is absolutely necessary in the service. probably better to work per request if we execute the request on a separate background thread
 	Queue is needed for containers, on cloning the template ct is locked so not possible to clone concurrently.

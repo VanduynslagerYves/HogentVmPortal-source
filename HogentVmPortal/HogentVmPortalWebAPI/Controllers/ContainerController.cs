@@ -24,6 +24,19 @@ namespace HogentVmPortalWebAPI.Controllers
             _ctRepository = ctRepository;
         }
 
+        [HttpPost("validate")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status202Accepted)]
+        public async Task<IActionResult> Validate(VirtualMachineCreateRequest request)
+        {
+            if (request == null) return BadRequest("Invalid request data");
+
+            var nameExists = await _ctRepository.NameExistsAsync(request.Name);
+
+            var isValid = !nameExists;
+
+            return Ok(isValid);
+        }
+
         [HttpPost("create")]
         [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
         public IActionResult Create(ContainerCreateRequest request)

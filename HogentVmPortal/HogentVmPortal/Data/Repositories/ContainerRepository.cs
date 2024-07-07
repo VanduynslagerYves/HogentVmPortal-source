@@ -7,7 +7,6 @@ namespace HogentVmPortal.Data.Repositories
     public interface IContainerRepository
     {
         public Task<Container> GetById(Guid id, bool includeUsers = false);
-        public bool ContainerNameExists(string name);
     }
 
     public class ContainerRepository : IContainerRepository
@@ -41,11 +40,6 @@ namespace HogentVmPortal.Data.Repositories
 
             if (container == null) throw new ContainerNotFoundException(id.ToString());
             return container;
-        }
-
-        public bool ContainerNameExists(string name)
-        {
-            return _containers.Any(e => e.Name.Equals(name));
         }
     }
 }
