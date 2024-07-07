@@ -7,8 +7,9 @@ namespace HogentVmPortalWebAPI.Data.Repositories
 {
     public interface IVirtualMachineRepository
     {
+        Task<bool> NameExistsAsync(string name);
         Task<List<VirtualMachineDTO>> GetAll(bool includeUsers = false);
-        Task<VirtualMachine> GetById(Guid id, bool includeUsers = false);
+        Task<VirtualMachineDTO> GetById(Guid id, bool includeUsers = false);
         Task Add(VirtualMachine virtualMachine);
         Task Update(VirtualMachine virtualMachine);
         Task Delete(Guid id);
@@ -47,26 +48,30 @@ namespace HogentVmPortalWebAPI.Data.Repositories
         }
 
         //TODO: map to DTO, template non required in DTO
-        public async Task<VirtualMachine> GetById(Guid id, bool includeUsers = false)
+        public async Task<VirtualMachineDTO> GetById(Guid id, bool includeUsers = false)
         {
-            VirtualMachine? virtualMachine = null;
+            VirtualMachineDTO? virtualMachineDTO = null;
 
             if (includeUsers)
             {
-                virtualMachine = await _virtualMachines
+                var virtualMachine = await _virtualMachines
                     .Include(x => x.Owner)
                     .Include(x => x.Template)
                     .SingleOrDefaultAsync(x => x.Id == id);
+
+                virtualMachineDTO = virtualMachine != null ? VirtualMachine.ToDTO(virtualMachine) : null;
             }
             else
             {
-                virtualMachine = await _virtualMachines
+                var virtualMachine = await _virtualMachines
                     .Include(x => x.Template)
                     .SingleOrDefaultAsync(x => x.Id == id);
+
+                virtualMachineDTO = virtualMachine != null ? VirtualMachine.ToDTO(virtualMachine) : null;
             }
 
-            if (virtualMachine == null) throw new VirtualMachineNotFoundException(id.ToString());
-            return virtualMachine;
+            if (virtualMachineDTO == null) throw new VirtualMachineNotFoundException(id.ToString());
+            return virtualMachineDTO;
         }
 
         public async Task Add(VirtualMachine virtualMachine)
@@ -83,7 +88,7 @@ namespace HogentVmPortalWebAPI.Data.Repositories
 
         public async Task Delete(Guid id)
         {
-            var virtualMachine = await GetById(id);
+           var virtualMachine = await _virtualMachines.SingleOrDefaultAsync(x => x.Id == id);
 
             if (virtualMachine == null) throw new VirtualMachineNotFoundException(id.ToString());
 
@@ -91,9 +96,9 @@ namespace HogentVmPortalWebAPI.Data.Repositories
             await SaveChangesAsync();
         }
 
-        public bool VirtualMachineNameExists(string name)
+        public async Task<bool> NameExistsAsync(string name)
         {
-            return _virtualMachines.Any(e => e.Name.Equals(name));
+            return await _virtualMachines.AnyAsync(e => e.Name.Equals(name));
         }
 
         private async Task SaveChangesAsync()

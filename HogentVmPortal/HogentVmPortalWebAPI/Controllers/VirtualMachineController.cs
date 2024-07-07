@@ -24,6 +24,19 @@ namespace HogentVmPortalWebAPI.Controllers
             _vmRepository = vmRepository;
         }
 
+        [HttpPost("validate")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status202Accepted)]
+        public async Task<IActionResult> Validate(VirtualMachineCreateRequest request)
+        {
+            if (request == null) return BadRequest("Invalid request data");
+
+            var nameExists = await _vmRepository.NameExistsAsync(request.Name);
+
+            var isValid = !nameExists;
+
+            return Ok(isValid);
+        }
+
         [HttpPost("create")]
         [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
         public IActionResult Create(VirtualMachineCreateRequest request)
@@ -76,9 +89,9 @@ namespace HogentVmPortalWebAPI.Controllers
         [ProducesResponseType(typeof(IEnumerable<VirtualMachineDTO>), StatusCodes.Status200OK)] //this shows the returned object in the ApiExplorer (e.g. swagger)
         public async Task<IActionResult> GetAll(bool includeUsers = false)
         {
-            var vms = await _vmRepository.GetAll(includeUsers);
+                var vms = await _vmRepository.GetAll(includeUsers);
 
-            return Ok(vms);
+                return Ok(vms);
         }
 
         //TODO: mapping to DTO
@@ -86,9 +99,18 @@ namespace HogentVmPortalWebAPI.Controllers
         [ProducesResponseType(typeof(VirtualMachineDTO), StatusCodes.Status200OK)] //this shows the returned object in the ApiExplorer (e.g. swagger)
         public async Task<IActionResult> GetById(Guid id, bool includeUsers = false)
         {
-            var result = await _vmRepository.GetById(id, includeUsers);
+            try
+            {
+                var result = await _vmRepository.GetById(id, includeUsers);
 
-            return Ok(result);
+                return Ok(result);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+
+            return NotFound(id);
         }
 
         [HttpGet("status/{taskId}")]

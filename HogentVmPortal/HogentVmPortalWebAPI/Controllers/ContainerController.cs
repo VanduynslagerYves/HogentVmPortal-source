@@ -24,6 +24,19 @@ namespace HogentVmPortalWebAPI.Controllers
             _ctRepository = ctRepository;
         }
 
+        [HttpPost("validate")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status202Accepted)]
+        public async Task<IActionResult> Validate(ContainerCreateRequest request)
+        {
+            if (request == null) return BadRequest("Invalid request data");
+
+            var nameExists = await _ctRepository.NameExistsAsync(request.Name);
+
+            var isValid = !nameExists;
+
+            return Ok(isValid);
+        }
+
         [HttpPost("create")]
         [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
         public IActionResult Create(ContainerCreateRequest request)
@@ -73,9 +86,18 @@ namespace HogentVmPortalWebAPI.Controllers
         [ProducesResponseType(typeof(ContainerDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetById(Guid id, bool includeUsers = false)
         {
-            var result = await _ctRepository.GetById(id, includeUsers);
+            try
+            {
+                var result = await _ctRepository.GetById(id, includeUsers);
 
-            return Ok(result);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+
+            return NotFound(id);
         }
 
         [HttpGet("status/{taskId}")]

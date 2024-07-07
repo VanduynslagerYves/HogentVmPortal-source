@@ -1,15 +1,15 @@
-﻿using HogentVmPortal.Shared.Model;
+﻿using HogentVmPortal.Shared.DTO;
 using System.ComponentModel.DataAnnotations;
 
 namespace HogentVmPortal.Shared.ViewModel
 {
-    public class ContainerDelete : ViewModelBase<ContainerDelete, Container>
+    public class ContainerDelete : ViewModelBase<ContainerDelete, ContainerDTO>
     {
         [Required]
         public Guid Id { get; set; }
         public string? Name { get; private set; }
 
-        public static ContainerDelete ToViewModel(Container container)
+        public static ContainerDelete ToViewModel(ContainerDTO container)
         {
             return new ContainerDelete
             {

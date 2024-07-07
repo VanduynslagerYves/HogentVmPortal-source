@@ -16,7 +16,6 @@ namespace HogentVmPortal.Controllers
     {
         private readonly ILogger<VirtualMachineController> _logger;
 
-        private readonly IVirtualMachineRepository _vmRepository;
         private readonly IVirtualMachineTemplateRepository _vmTemplateRepository;
         private readonly ICourseRepository _courseRepository;
 
@@ -27,7 +26,6 @@ namespace HogentVmPortal.Controllers
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
         public VirtualMachineController(ILogger<VirtualMachineController> logger,
-            IVirtualMachineRepository virtualMachineRepository,
             IVirtualMachineTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
             ICourseRepository courseRepository,
@@ -36,7 +34,6 @@ namespace HogentVmPortal.Controllers
         {
             _logger = logger;
 
-            _vmRepository = virtualMachineRepository;
             _vmTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
             _courseRepository = courseRepository;
@@ -89,7 +86,24 @@ namespace HogentVmPortal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name, Login, Password, SshKey, CloneId")] VirtualMachineCreate virtualMachineViewModel)
         {
-            if (_vmRepository.VirtualMachineNameExists(virtualMachineViewModel.Name))
+            var createRequest = new VirtualMachineCreateRequest
+            {
+                Id = Guid.NewGuid(), //Not needed right now, will be needed when the request is saved and passed on to other microservice
+                TimeStamp = DateTime.Now,
+                Name = virtualMachineViewModel.Name,
+
+                OwnerId = User.GetId(),
+                CloneId = virtualMachineViewModel.CloneId,
+
+                //a full implementation can determine what to do here. auto-generate and send via e-mail?
+                Login = virtualMachineViewModel.Login,
+                Password = virtualMachineViewModel.Password,
+
+                SshKey = virtualMachineViewModel.SshKey,
+            };
+
+            var isValid = await _vmApiService.Validate(createRequest);
+            if (!isValid)
             {
                 ModelState.AddModelError("Name", $"{virtualMachineViewModel.Name} is taken");
             }
@@ -98,24 +112,6 @@ namespace HogentVmPortal.Controllers
             {
                 try
                 {
-                    var currentUserId = User.GetId();
-
-                    var createRequest = new VirtualMachineCreateRequest
-                    {
-                        Id = Guid.NewGuid(), //Not needed right now, will be needed when the request is saved and passed on to other microservice
-                        TimeStamp = DateTime.Now,
-                        Name = virtualMachineViewModel.Name,
-
-                        OwnerId = currentUserId,
-                        CloneId = virtualMachineViewModel.CloneId,
-
-                        //a full implementation can determine what to do here. auto-generate and send via e-mail?
-                        Login = virtualMachineViewModel.Login,
-                        Password = virtualMachineViewModel.Password,
-
-                        SshKey = virtualMachineViewModel.SshKey,
-                    };
-
                     //call API, TODO: publish data to rabbitMQ and save request in request db
                     var response = await _vmApiService.CreateVmAsync(createRequest);
                     ViewBag.Response = response;
@@ -150,7 +146,7 @@ namespace HogentVmPortal.Controllers
 
             try
             {
-                var virtualMachine = await _vmRepository.GetById(id);
+                var virtualMachine = await _vmApiService.GetById(id, includeUsers: true);
                 virtualMachineDelete = VirtualMachineDelete.ToViewModel(virtualMachine);
             }
             catch (VirtualMachineNotFoundException e)
@@ -169,7 +165,7 @@ namespace HogentVmPortal.Controllers
         {
             try
             {
-                var virtualMachine = await _vmRepository.GetById(id);
+                var virtualMachine = await _vmApiService.GetById(id, includeUsers: true);
 
                 var removeRequest = new VirtualMachineRemoveRequest
                 {

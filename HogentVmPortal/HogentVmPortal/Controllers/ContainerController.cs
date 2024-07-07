@@ -16,7 +16,6 @@ namespace HogentVmPortal.Controllers
     {
         private readonly ILogger<ContainerController> _logger;
 
-        private readonly IContainerRepository _containerRepository;
         private readonly IContainerTemplateRepository _containerTemplateRepository;
         private readonly ICourseRepository _courseRepository;
 
@@ -27,7 +26,6 @@ namespace HogentVmPortal.Controllers
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
         public ContainerController(ILogger<ContainerController> logger,
-            IContainerRepository containerRepository,
             IContainerTemplateRepository templateRepository,
             IAppUserRepository appUserRepository,
             ICourseRepository courseRepository,
@@ -36,7 +34,6 @@ namespace HogentVmPortal.Controllers
         {
             _logger = logger;
 
-            _containerRepository = containerRepository;
             _containerTemplateRepository = templateRepository;
             _appUserRepository = appUserRepository;
             _courseRepository = courseRepository;
@@ -89,7 +86,18 @@ namespace HogentVmPortal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name, CloneId")] ContainerCreate containerViewModel)
         {
-            if (_containerRepository.ContainerNameExists(containerViewModel.Name))
+            var createRequest = new ContainerCreateRequest
+            {
+                Id = Guid.NewGuid(),
+                TimeStamp = DateTime.Now,
+                Name = containerViewModel.Name,
+
+                OwnerId = User.GetId(),
+                CloneId = containerViewModel.CloneId,
+            };
+
+            var isValid = await _ctApiService.Validate(createRequest);
+            if (!isValid)
             {
                 ModelState.AddModelError("Name", $"{containerViewModel.Name} is taken");
             }
@@ -98,18 +106,6 @@ namespace HogentVmPortal.Controllers
             {
                 try
                 {
-                    var currentUserId = User.GetId();
-
-                    var createRequest = new ContainerCreateRequest
-                    {
-                        Id = Guid.NewGuid(),
-                        TimeStamp = DateTime.Now,
-                        Name = containerViewModel.Name,
-
-                        OwnerId = currentUserId,
-                        CloneId = containerViewModel.CloneId,
-                    };
-
                     //call API
                     var response = await _ctApiService.CreateContainerAsync(createRequest);
                     ViewBag.Response = response;
@@ -144,7 +140,7 @@ namespace HogentVmPortal.Controllers
 
             try
             {
-                var container = await _containerRepository.GetById(id);
+                var container = await _ctApiService.GetById(id, includeUsers: true);
                 containerDelete = ContainerDelete.ToViewModel(container);
             }
             catch (ContainerNotFoundException e)
@@ -163,7 +159,7 @@ namespace HogentVmPortal.Controllers
         {
             try
             {
-                var container = await _containerRepository.GetById(id);
+                var container = await _ctApiService.GetById(id, includeUsers: true);
 
                 var removeRequest = new ContainerRemoveRequest
                 {
