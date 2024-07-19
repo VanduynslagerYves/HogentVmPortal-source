@@ -1,5 +1,5 @@
 ﻿using HogentVmPortal.Shared.DTO;
-using HogentVmPortalWebAPI.Data.Repositories;
+using HogentVmPortal.Shared.Repositories;
 using HogentVmPortalWebAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
@@ -49,10 +49,19 @@ namespace HogentVmPortalWebAPI.Controllers
             //this will also immediately return a response while running the task in a background thread.
             //This solution might suffer under heavy load (concurrent create requests), so working with a queue is generally preferred.
 
-            Task.Run(async () =>
+            // TODO: this does not need to run on a background thread, this will only enqueue a message to a MQ. So we can just call it
+
+            using (var scope = _serviceScopeFactory.CreateAsyncScope())
             {
-                await ProcessCreateRequestAsync(request, taskId);
-            });
+                var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineQueueHandler>();
+                //await handler.HandleVirtualMachineCreateRequest(request);
+                handler.EnqueueCreateRequest(request);
+            }
+
+            //Task.Run(async () =>
+            //{
+            //    await ProcessCreateRequestAsync(request, taskId);
+            //});
 
             //Enqueue a create task
             //_taskQueue.Enqueue(async token =>
@@ -71,10 +80,17 @@ namespace HogentVmPortalWebAPI.Controllers
 
             var taskId = Guid.NewGuid().ToString();
 
-            Task.Run(async () =>
+            using (var scope = _serviceScopeFactory.CreateAsyncScope())
             {
-                await ProcessRemoveRequestAsync(request, taskId);
-            });
+                var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineQueueHandler>();
+                handler.EnqueueRemoveRequest(request);
+                //await handler.HandleVirtualMachineRemoveRequest(request);
+            }
+
+            //Task.Run(async () =>
+            //{
+            //    await ProcessRemoveRequestAsync(request, taskId);
+            //});
 
             //Enqueue a remove task
             //_taskQueue.Enqueue(async token =>
@@ -125,52 +141,54 @@ namespace HogentVmPortalWebAPI.Controllers
             return NotFound(new StatusResponse{ TaskId = taskId, Status = "Not Found" });
         }
 
-        private async Task ProcessCreateRequestAsync(VirtualMachineCreateRequest request, string taskId)
-        {
-            try
-            {
-                _taskStatuses[taskId] = "Processing";
-                _logger.LogInformation("Processing task {taskId}", taskId);
+        //private async Task ProcessCreateRequestAsync(VirtualMachineCreateRequest request, string taskId)
+        //{
+        //    try
+        //    {
+        //        _taskStatuses[taskId] = "Processing";
+        //        _logger.LogInformation("Processing task {taskId}", taskId);
 
-                //This task will be executed in a background thread: we need to create a new scope for the handler, so dependencies for the handler can be correctly resolved with DI
-                using (var scope = _serviceScopeFactory.CreateAsyncScope())
-                {
-                    var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
-                    await handler.HandleVirtualMachineCreateRequest(request);
-                }
+        //        //This task will be executed in a background thread: we need to create a new scope for the handler, so dependencies for the handler can be correctly resolved with DI
+        //        using (var scope = _serviceScopeFactory.CreateAsyncScope())
+        //        {
+        //            var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineQueueHandler>();
+        //            //await handler.HandleVirtualMachineCreateRequest(request);
+        //            handler.EnqueueCreateRequest(request);
+        //        }
 
-                _taskStatuses[taskId] = "Completed";
-                _logger.LogInformation("Completed task {taskId}", taskId);
-            }
-            catch (Exception)
-            {
-                _taskStatuses[taskId] = "Failed";
-                _logger.LogError("Failed task {taskId}", taskId);
-            }
-        }
+        //        _taskStatuses[taskId] = "Completed";
+        //        _logger.LogInformation("Completed task {taskId}", taskId);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        _taskStatuses[taskId] = "Failed";
+        //        _logger.LogError("Failed task {taskId}", taskId);
+        //    }
+        //}
 
-        private async Task ProcessRemoveRequestAsync(VirtualMachineRemoveRequest request, string taskId)
-        {
-            try
-            {
-                _taskStatuses[taskId] = "Processing";
-                _logger.LogInformation("Processing task {taskId}", taskId);
+        //private async Task ProcessRemoveRequestAsync(VirtualMachineRemoveRequest request, string taskId)
+        //{
+        //    try
+        //    {
+        //        _taskStatuses[taskId] = "Processing";
+        //        _logger.LogInformation("Processing task {taskId}", taskId);
 
-                //This task will be executed in a background thread: we need to create a new scope for the handler, so dependencies for the handler can be correctly resolved with DI
-                using (var scope = _serviceScopeFactory.CreateAsyncScope())
-                {
-                    var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineHandler>();
-                    await handler.HandleVirtualMachineRemoveRequest(request);
-                }
+        //        //This task will be executed in a background thread: we need to create a new scope for the handler, so dependencies for the handler can be correctly resolved with DI
+        //        using (var scope = _serviceScopeFactory.CreateAsyncScope())
+        //        {
+        //            var handler = scope.ServiceProvider.GetRequiredService<VirtualMachineQueueHandler>();
+        //            handler.EnqueueRemoveRequest(request);
+        //            //await handler.HandleVirtualMachineRemoveRequest(request);
+        //        }
 
-                _taskStatuses[taskId] = "Completed";
-                _logger.LogInformation("Completed task {taskId}", taskId);
-            }
-            catch (Exception)
-            {
-                _taskStatuses[taskId] = "Failed";
-                _logger.LogError("Failed task {taskId}", taskId);
-            }
-        }
+        //        _taskStatuses[taskId] = "Completed";
+        //        _logger.LogInformation("Completed task {taskId}", taskId);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        _taskStatuses[taskId] = "Failed";
+        //        _logger.LogError("Failed task {taskId}", taskId);
+        //    }
+        //}
     }
 }

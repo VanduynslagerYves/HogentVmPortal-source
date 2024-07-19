@@ -2,8 +2,13 @@
 using HogentVmPortal.Shared.Model;
 using Microsoft.EntityFrameworkCore;
 
-namespace VirtualMachineWorker.Data.Repositories
+namespace HogentVmPortal.Shared.Repositories
 {
+    public interface IContainerTemplateRepository
+    {
+        Task<ContainerTemplate> GetByCloneId(int id);
+    }
+
     public class ContainerTemplateRepository : IContainerTemplateRepository
     {
         private readonly ApplicationDbContext _context;
@@ -18,6 +23,7 @@ namespace VirtualMachineWorker.Data.Repositories
         {
             var template = await _templates.SingleOrDefaultAsync(t => t.ProxmoxId == id);
             if (template == null) throw new ContainerTemplateNotFoundException();
+
             return template;
         }
     }

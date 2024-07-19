@@ -3,7 +3,7 @@ using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared.Model;
 using Microsoft.EntityFrameworkCore;
 
-namespace HogentVmPortalWebAPI.Data.Repositories
+namespace HogentVmPortal.Shared.Repositories
 {
     public interface IContainerRepository
     {

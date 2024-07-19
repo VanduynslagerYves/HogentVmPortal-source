@@ -3,7 +3,7 @@ using Pulumi.Automation;
 using Renci.SshNet;
 using System.Text.RegularExpressions;
 using HogentVmPortalWebAPI.ProviderStrategies;
-using HogentVmPortalWebAPI.Data.Repositories;
+using HogentVmPortal.Shared.Repositories;
 using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared;
 using Microsoft.Extensions.Options;

@@ -2,8 +2,13 @@
 using HogentVmPortal.Shared.Model;
 using Microsoft.EntityFrameworkCore;
 
-namespace VirtualMachineWorker.Data.Repositories
+namespace HogentVmPortal.Shared.Repositories
 {
+    public interface IVirtualMachineTemplateRepository
+    {
+        Task<VirtualMachineTemplate> GetByCloneId(int id);
+    }
+
     public class VirtualMachineTemplateRepository : IVirtualMachineTemplateRepository
     {
         private readonly ApplicationDbContext _context;

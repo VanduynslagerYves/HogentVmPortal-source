@@ -1,14 +1,22 @@
-﻿using Pulumi.Automation;
+﻿using HogentVmPortal.Shared;
+using HogentVmPortal.Shared.DTO;
+using Pulumi.Automation;
 using Pulumi.ProxmoxVE.VM.Inputs;
 using Pulumi.ProxmoxVE.VM;
 using Pulumi.ProxmoxVE;
 using Pulumi;
 
-namespace VirtualMachineWorker.PulumiStrategy
+namespace VmHandler.ProviderStrategies
 {
-    public partial class ProxmoxStrategy
+    public class ProxmoxStrategy : ProviderStrategy
     {
-        //https://www.pulumi.com/ai/answers/k6nkDM2m11a1DDaSnFx5Bb/provisioning-proxmox-ve-vms
+        private readonly ProxmoxConfig _config;
+
+        public ProxmoxStrategy(ProxmoxConfig config)
+        {
+            _config = config;
+        }
+
         public override PulumiFn CreateVirtualMachine(VirtualMachineParams vmArgs)
         {
             var createArgs = vmArgs as ProxmoxVirtualMachineCreateParams;
@@ -16,6 +24,12 @@ namespace VirtualMachineWorker.PulumiStrategy
 
             return PulumiFn.Create(() =>
             {
+                //ssh config, used to query pulumi state
+                //var ssh = new ProviderSshArgs
+                //{
+
+                //}
+
                 //proxmox specific
                 var provider = new Provider("proxmox_provider", new ProviderArgs
                 {
@@ -23,6 +37,7 @@ namespace VirtualMachineWorker.PulumiStrategy
                     Insecure = _config.Insecure,
                     Username = _config.UserName,
                     Password = _config.Password,
+                    //Ssh = ssh,
                 });
 
                 //proxmox specific
@@ -99,6 +114,10 @@ namespace VirtualMachineWorker.PulumiStrategy
                 });
 
                 //QEMU agent must be enabled, and ip setup must be done via Initialization (cloud-init) in code (see above), otherwise the ip adress is not known until after the host has booted.
+                //TODO: look for a way to get the ip from Pulumi state (cloud)
+                //notes: these properties effectively already do this.
+
+                //TODO: try catch these. not filled in when an invalid SSH key is given. So validate this too.
                 var ip = virtualMachine.Ipv4Addresses.Apply(res => res.LastOrDefault().LastOrDefault());
                 var proxmoxId = virtualMachine.Id;
                 var login = virtualMachine.Initialization.Apply(res => res!.UserAccount!.Username);
@@ -114,6 +133,34 @@ namespace VirtualMachineWorker.PulumiStrategy
             });
         }
 
+        public override PulumiFn RemoveVirtualMachine(VirtualMachineParams vmArgs)
+        {
+            var deleteArgs = vmArgs as ProxmoxVirtualMachineDeleteParams;
+            if (deleteArgs == null) throw new ArgumentNullException();
+
+            return PulumiFn.Create(() =>
+            {
+                var provider = new Provider("proxmox_provider", new ProviderArgs
+                {
+                    Endpoint = _config.Endpoint,
+                    Insecure = _config.Insecure,
+                    Username = _config.UserName,
+                    Password = _config.Password,
+                });
+
+                var virtualMachine = new VirtualMachine(deleteArgs.VmName, new VirtualMachineArgs
+                {
+                    NodeName = _config.TargetNode,
+                    Name = deleteArgs.VmName,
+                },
+                new CustomResourceOptions
+                {
+                    Provider = provider,
+                });
+            });
+        }
+
+        #region Edit
         //public override PulumiFn EditVirtualMachine(VirtualMachineParams vmArgs)
         //{
         //    var editArgs = vmArgs as ProxmoxVirtualMachineEditParams;
@@ -221,33 +268,7 @@ namespace VirtualMachineWorker.PulumiStrategy
         //        };
         //    });
         //}
-
-        public override PulumiFn RemoveVirtualMachine(VirtualMachineParams vmArgs)
-        {
-            var deleteArgs = vmArgs as ProxmoxVirtualMachineDeleteParams;
-            if (deleteArgs == null) throw new ArgumentNullException();
-
-            return PulumiFn.Create(() =>
-            {
-                var provider = new Provider("proxmox_provider", new ProviderArgs
-                {
-                    Endpoint = _config.Endpoint,
-                    Insecure = _config.Insecure,
-                    Username = _config.UserName,
-                    Password = _config.Password,
-                });
-
-                var virtualMachine = new VirtualMachine(deleteArgs.VmName, new VirtualMachineArgs
-                {
-                    NodeName = _config.TargetNode,
-                    Name = deleteArgs.VmName,
-                },
-                new CustomResourceOptions
-                {
-                    Provider = provider,
-                });
-            });
-        }
+        #endregion
     }
 
     public class ProxmoxVirtualMachineCreateParams : VirtualMachineParams
@@ -256,9 +277,28 @@ namespace VirtualMachineWorker.PulumiStrategy
         public required string Login { get; set; }
         public required string Password { get; set; }
         public required string SshKey { get; set; }
+
+        public static ProxmoxVirtualMachineCreateParams FromViewModel(VirtualMachineCreateRequest request)
+        {
+            return new ProxmoxVirtualMachineCreateParams
+            {
+                CloneId = request.CloneId,
+                Login = request.Login,
+                Password = request.Password,
+                SshKey = request.SshKey,
+                VmName = request.Name,
+            };
+        }
     }
 
     public class ProxmoxVirtualMachineDeleteParams : VirtualMachineParams
     {
+        public static ProxmoxVirtualMachineDeleteParams FromViewModel(VirtualMachineRemoveRequest request)
+        {
+            return new ProxmoxVirtualMachineDeleteParams
+            {
+                VmName = request.Name,
+            };
+        }
     }
 }

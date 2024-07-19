@@ -1,5 +1,5 @@
 ﻿using HogentVmPortal.Shared.DTO;
-using HogentVmPortalWebAPI.Data.Repositories;
+using HogentVmPortal.Shared.Repositories;
 using HogentVmPortalWebAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
