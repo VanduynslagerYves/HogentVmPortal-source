@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HogentVmPortal", "HogentVmP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HogentVmPortal.Shared", "HogentVmPortal.Shared\HogentVmPortal.Shared.csproj", "{E3C03FB4-7C70-4845-851E-1425C26243B9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HogentVmPortal.RequestQueue.WebAPI", "HogentVmPortalWebAPI\HogentVmPortal.RequestQueue.WebAPI.csproj", "{595C97F2-CB36-48B8-9E97-F63F2D576757}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HogentVmPortal.RequestQueue.WebAPI", "HogentVmPortal.RequestQueue.WebAPI\HogentVmPortal.RequestQueue.WebAPI.csproj", "{595C97F2-CB36-48B8-9E97-F63F2D576757}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HogentVmPortal.RequestQueue.VmHandler", "VmHandler\HogentVmPortal.RequestQueue.VmHandler.csproj", "{0FBA3D3D-DC22-4DDD-803E-9E303F9C95E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HogentVmPortal.RequestQueue.VmHandler", "HogentVmPortal.RequestQueue.VmHandler\HogentVmPortal.RequestQueue.VmHandler.csproj", "{0FBA3D3D-DC22-4DDD-803E-9E303F9C95E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HogentVmPortal.RequestQueue.CtHandler", "HogentVmPortal.RequestQueue.CtHandler\HogentVmPortal.RequestQueue.CtHandler.csproj", "{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{0FBA3D3D-DC22-4DDD-803E-9E303F9C95E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FBA3D3D-DC22-4DDD-803E-9E303F9C95E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FBA3D3D-DC22-4DDD-803E-9E303F9C95E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,6 @@
 ﻿using Pulumi.Automation;
 
-namespace VmHandler.ProviderStrategies
+namespace HogentVmPortal.RequestQueue.VmHandler.ProviderStrategies
 {
     public abstract class ProviderStrategy
     {

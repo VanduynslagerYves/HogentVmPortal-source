@@ -1,14 +1,22 @@
-﻿using Pulumi.Automation;
+﻿using HogentVmPortal.Shared;
+using HogentVmPortal.Shared.DTO;
+using Pulumi.Automation;
 using Pulumi.ProxmoxVE;
 using Pulumi;
-using Pulumi.ProxmoxVE.CT;
 using Pulumi.ProxmoxVE.CT.Inputs;
-using HogentVmPortal.Shared.DTO;
+using Pulumi.ProxmoxVE.CT;
 
-namespace HogentVmPortalWebAPI.ProviderStrategies
+namespace HogentVmPortal.RequestQueue.VmHandler.ProviderStrategies
 {
-    public partial class ProxmoxStrategy
+    public class ProxmoxStrategy : ProviderStrategy
     {
+        private readonly ProxmoxConfig _config;
+
+        public ProxmoxStrategy(ProxmoxConfig config)
+        {
+            _config = config;
+        }
+
         public override PulumiFn CreateContainer(ContainerParams cArgs)
         {
             var createArgs = cArgs as ProxmoxContainerCreateParams;

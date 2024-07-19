@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace HogentVmPortalWebAPI.Obsolete
+namespace HogentVmPortal.RequestQueue.WebAPI.Obsolete
 {
     [Obsolete("wtf KISS")]
     public interface IBackgroundTaskQueue

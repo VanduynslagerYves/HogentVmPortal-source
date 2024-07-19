@@ -62,13 +62,13 @@ namespace HogentVmPortal.Controllers
                 TempData["Error"] = ex.Message;
                 _logger.LogError(ex.Message);
 
-                return View(new List<VirtualMachineListItem>());
+                return View(new List<ContainerListItem>());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
 
-                return View(new List<VirtualMachineListItem>());
+                return View(new List<ContainerListItem>());
             }
         }
 

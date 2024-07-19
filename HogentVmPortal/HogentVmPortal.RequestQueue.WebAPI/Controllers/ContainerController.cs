@@ -1,10 +1,10 @@
 ﻿using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared.Repositories;
-using HogentVmPortalWebAPI.Handlers;
+using HogentVmPortal.RequestQueue.WebAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
 
-namespace HogentVmPortalWebAPI.Controllers
+namespace HogentVmPortal.RequestQueue.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -47,11 +47,18 @@ namespace HogentVmPortalWebAPI.Controllers
 
             //TODO: save request here in db with taskId and status pending 0
 
-            //TODO: use queued implementation for creation: template ct is locked during cloning
-            Task.Run(async () =>
+            using (var scope = _serviceScopeFactory.CreateAsyncScope())
             {
-                await ProcessCreateRequestAsync(request, taskId);
-            });
+                var handler = scope.ServiceProvider.GetRequiredService<ContainerQueueHandler>();
+                handler.EnqueueCreateRequest(request);
+                //await handler.HandleContainerCreateRequest(request);
+            }
+
+            ////TODO: use queued implementation for creation: template ct is locked during cloning
+            //Task.Run(async () =>
+            //{
+            //    await ProcessCreateRequestAsync(request, taskId);
+            //});
 
             return Accepted(new TaskResponse { TaskId = taskId });
         }
@@ -64,10 +71,16 @@ namespace HogentVmPortalWebAPI.Controllers
 
             var taskId = Guid.NewGuid().ToString();
 
-            Task.Run(async () =>
+            using (var scope = _serviceScopeFactory.CreateScope())
             {
-                await ProcessRemoveRequestAsync(request, taskId);
-            });
+                var handler = scope.ServiceProvider.GetRequiredService<ContainerQueueHandler>();
+                handler.EnqueueRemoveRequest(request);
+            }
+
+            //Task.Run(async () =>
+            //{
+            //    await ProcessRemoveRequestAsync(request, taskId);
+            //});
 
             return Accepted(new TaskResponse { TaskId = taskId });
         }
@@ -113,52 +126,53 @@ namespace HogentVmPortalWebAPI.Controllers
         }
 
         //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
-        private async Task ProcessCreateRequestAsync(ContainerCreateRequest request, string taskId)
-        {
-            try
-            {
-                //TODO: update request here in db with the taskId and updated status
-                _taskStatuses[taskId] = "Processing";
-                _logger.LogInformation("Processing task {taskId}", taskId);
+        //private async Task ProcessCreateRequestAsync(ContainerCreateRequest request, string taskId)
+        //{
+        //    try
+        //    {
+        //        //TODO: update request here in db with the taskId and updated status
+        //        _taskStatuses[taskId] = "Processing";
+        //        _logger.LogInformation("Processing task {taskId}", taskId);
 
-                using (var scope = _serviceScopeFactory.CreateScope())
-                {
-                    var handler = scope.ServiceProvider.GetRequiredService<ContainerHandler>();
-                    await handler.HandleContainerCreateRequest(request);
-                }
+        //        using (var scope = _serviceScopeFactory.CreateScope())
+        //        {
+        //            var handler = scope.ServiceProvider.GetRequiredService<ContainerQueueHandler>();
+        //            handler.EnqueueCreateRequest(request);
+        //            //await handler.HandleContainerCreateRequest(request);
+        //        }
 
-                _taskStatuses[taskId] = "Completed";
-                _logger.LogInformation("Completed task {taskId}", taskId);
-            }
-            catch (Exception)
-            {
-                _taskStatuses[taskId] = "Failed";
-                _logger.LogError("Failed task {taskId}", taskId);
-            }
-        }
+        //        _taskStatuses[taskId] = "Completed";
+        //        _logger.LogInformation("Completed task {taskId}", taskId);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        _taskStatuses[taskId] = "Failed";
+        //        _logger.LogError("Failed task {taskId}", taskId);
+        //    }
+        //}
 
         //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
-        private async Task ProcessRemoveRequestAsync(ContainerRemoveRequest request, string taskId)
-        {
-            try
-            {
-                _taskStatuses[taskId] = "Processing";
-                _logger.LogInformation("Processing task {taskId}", taskId);
+        //private async Task ProcessRemoveRequestAsync(ContainerRemoveRequest request, string taskId)
+        //{
+        //    try
+        //    {
+        //        _taskStatuses[taskId] = "Processing";
+        //        _logger.LogInformation("Processing task {taskId}", taskId);
 
-                using (var scope = _serviceScopeFactory.CreateScope())
-                {
-                    var handler = scope.ServiceProvider.GetRequiredService<ContainerHandler>();
-                    await handler.HandleContainerRemoveRequest(request);
-                }
+        //        using (var scope = _serviceScopeFactory.CreateScope())
+        //        {
+        //            var handler = scope.ServiceProvider.GetRequiredService<ContainerQueueHandler>();
+        //            await handler.HandleContainerRemoveRequest(request);
+        //        }
 
-                _taskStatuses[taskId] = "Completed";
-                _logger.LogInformation("Completed task {taskId}", taskId);
-            }
-            catch (Exception)
-            {
-                _taskStatuses[taskId] = "Failed";
-                _logger.LogError("Failed task {taskId}", taskId);
-            }
-        }
+        //        _taskStatuses[taskId] = "Completed";
+        //        _logger.LogInformation("Completed task {taskId}", taskId);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        _taskStatuses[taskId] = "Failed";
+        //        _logger.LogError("Failed task {taskId}", taskId);
+        //    }
+        //}
     }
 }

@@ -1,7 +1,7 @@
 using HogentVmPortal.Shared;
 using HogentVmPortal.Shared.Data;
 using HogentVmPortal.Shared.Repositories;
-using HogentVmPortalWebAPI.Handlers;
+using HogentVmPortal.RequestQueue.WebAPI.Handlers;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,15 +34,15 @@ builder.Services.AddCors(options =>
         });
 });
 
-//builder.Services.AddScoped<IVirtualMachineRepository, VirtualMachineRepository>();
+builder.Services.AddScoped<IVirtualMachineRepository, VirtualMachineRepository>();
 builder.Services.AddScoped<IContainerRepository, ContainerRepository>();
 //builder.Services.AddScoped<IVirtualMachineTemplateRepository, VirtualMachineTemplateRepository>();
-builder.Services.AddScoped<IContainerTemplateRepository, ContainerTemplateRepository>();
+//builder.Services.AddScoped<IContainerTemplateRepository, ContainerTemplateRepository>();
 
 //builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
 builder.Services.AddScoped<VirtualMachineQueueHandler>();
-builder.Services.AddScoped<ContainerHandler>();
+builder.Services.AddScoped<ContainerQueueHandler>();
 
 var app = builder.Build();
 

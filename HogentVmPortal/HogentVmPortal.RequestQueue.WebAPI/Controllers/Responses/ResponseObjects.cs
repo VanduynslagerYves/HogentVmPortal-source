@@ -1,4 +1,4 @@
-﻿namespace HogentVmPortalWebAPI.Controllers
+﻿namespace HogentVmPortal.RequestQueue.WebAPI.Controllers
 {
     internal class StatusResponse
     {

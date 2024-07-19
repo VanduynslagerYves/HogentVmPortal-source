@@ -2,16 +2,16 @@ using HogentVmPortal.Shared;
 using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared.Repositories;
 using HogentVmPortal.Shared.Model;
+using HogentVmPortal.RequestQueue.VmHandler.ProviderStrategies;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using VmHandler.ProviderStrategies;
 using Pulumi.Automation;
 
-namespace VmHandler
+namespace HogentVmPortal.RequestQueue.VmHandler
 {
     public class Worker : BackgroundService
     {

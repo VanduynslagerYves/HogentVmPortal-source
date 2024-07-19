@@ -1,4 +1,4 @@
-﻿namespace HogentVmPortalWebAPI.Obsolete
+﻿namespace HogentVmPortal.RequestQueue.WebAPI.Obsolete
 {
     //taskqueue injected as singleton
     [Obsolete("wtf KISS")]

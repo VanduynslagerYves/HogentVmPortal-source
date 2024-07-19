@@ -6,7 +6,7 @@ using Pulumi.ProxmoxVE.VM;
 using Pulumi.ProxmoxVE;
 using Pulumi;
 
-namespace VmHandler.ProviderStrategies
+namespace HogentVmPortal.RequestQueue.VmHandler.ProviderStrategies
 {
     public class ProxmoxStrategy : ProviderStrategy
     {

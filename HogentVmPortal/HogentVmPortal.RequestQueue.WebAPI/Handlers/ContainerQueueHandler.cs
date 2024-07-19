@@ -5,15 +5,14 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
-namespace HogentVmPortalWebAPI.Handlers
+namespace HogentVmPortal.RequestQueue.WebAPI.Handlers
 {
-    public class VirtualMachineQueueHandler
+    public class ContainerQueueHandler
     {
         private readonly IConnectionFactory _factory;
 
-        public VirtualMachineQueueHandler()
+        public ContainerQueueHandler()
         {
-
             // TDOO: read from appsettings.json
             _factory = new ConnectionFactory
             {
@@ -24,12 +23,12 @@ namespace HogentVmPortalWebAPI.Handlers
             };
         }
 
-        public void EnqueueCreateRequest(VirtualMachineCreateRequest createRequest)
+        public void EnqueueCreateRequest(ContainerCreateRequest createRequest)
         {
             try
             {
                 // Establish a connection to RabbitMQ server
-                using(var connection = _factory.CreateConnection())
+                using (var connection = _factory.CreateConnection())
                 using (var channel = connection.CreateModel())
                 {
                     var messageData = GetMessageData(createRequest);
@@ -37,14 +36,14 @@ namespace HogentVmPortalWebAPI.Handlers
                     if (messageData != null)
                     {
                         // Declare a queue (if it doesn't already exist)
-                        channel.QueueDeclare(queue: "vm_create_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+                        channel.QueueDeclare(queue: "ct_create_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
 
                         // Publish the message to the queue
-                        channel.BasicPublish(exchange: "", routingKey: "vm_create_queue", basicProperties: null, body: messageData);
+                        channel.BasicPublish(exchange: "", routingKey: "ct_create_queue", basicProperties: null, body: messageData);
                     }
                 }
             }
-            catch(BrokerUnreachableException ex)
+            catch (BrokerUnreachableException ex)
             {
                 Debug.WriteLine(ex.Message);
             }
@@ -54,7 +53,7 @@ namespace HogentVmPortalWebAPI.Handlers
             }
         }
 
-        public void EnqueueRemoveRequest(VirtualMachineRemoveRequest removeRequest)
+        public void EnqueueRemoveRequest(ContainerRemoveRequest removeRequest)
         {
             try
             {
@@ -66,10 +65,10 @@ namespace HogentVmPortalWebAPI.Handlers
                     if (messageData != null)
                     {
                         // Declare a queue (if it doesn't already exist)
-                        channel.QueueDeclare(queue: "vm_remove_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+                        channel.QueueDeclare(queue: "ct_remove_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
 
                         // Publish the message to the queue
-                        channel.BasicPublish(exchange: "", routingKey: "vm_remove_queue", basicProperties: null, body: messageData);
+                        channel.BasicPublish(exchange: "", routingKey: "ct_remove_queue", basicProperties: null, body: messageData);
                     }
                 }
             }

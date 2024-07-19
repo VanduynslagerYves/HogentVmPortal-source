@@ -1,10 +1,10 @@
 ﻿using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared.Repositories;
-using HogentVmPortalWebAPI.Handlers;
+using HogentVmPortal.RequestQueue.WebAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
 
-namespace HogentVmPortalWebAPI.Controllers
+namespace HogentVmPortal.RequestQueue.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
