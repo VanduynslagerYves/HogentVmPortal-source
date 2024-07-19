@@ -39,7 +39,7 @@ namespace HogentVmPortal.RequestQueue.VmHandler
             _proxmoxConfig = proxmoxConfig;
 
             //TODO: read connection settings from appsettings
-            var factory = new ConnectionFactory() { HostName = "192.168.152.142", UserName = "serviceuser", Password = "honda0603", Port = 5672 };
+            var factory = new ConnectionFactory() { HostName = "192.168.152.142", UserName = "serviceuser", Password = "root0603", Port = 5672 };
             _connection = factory.CreateConnection();
 
             _createChannel = _connection.CreateModel();

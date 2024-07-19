@@ -19,7 +19,7 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Handlers
             {
                 HostName = "192.168.152.142",
                 UserName = "serviceuser",
-                Password = "honda0603",
+                Password = "root0603",
                 Port = 5672,
             };
         }
