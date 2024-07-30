@@ -35,7 +35,10 @@ namespace HogentVmPortal.RequestQueue.CtHandler
 
         private readonly ConnectionFactory _factory;
 
-        public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IOptions<ProxmoxConfig> proxmoxConfig, IOptions<ProxmoxSshConfig> proxmoxSshConfig)
+        public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider,
+            IOptions<ProxmoxConfig> proxmoxConfig,
+            IOptions<ProxmoxSshConfig> proxmoxSshConfig,
+            IOptions<RabbitMQConfig> rabbitMQConfigOptions)
         {
             _logger = logger;
             var scope = serviceProvider.CreateScope();
@@ -48,8 +51,14 @@ namespace HogentVmPortal.RequestQueue.CtHandler
             _proxmoxConfig = proxmoxConfig;
             _proxmoxSshConfig = proxmoxSshConfig;
 
-            //TODO: read connection settings from appsettings
-            _factory = new ConnectionFactory() { HostName = "192.168.152.142", UserName = "serviceuser", Password = "root0603", Port = 5672 };
+            var rabbitMQConfig = rabbitMQConfigOptions.Value;
+            _factory = new ConnectionFactory
+            {
+                HostName = rabbitMQConfig.Uri,
+                Port = rabbitMQConfig.Port,
+                UserName = rabbitMQConfig.UserName,
+                Password = rabbitMQConfig.Password,
+            };
             _connection = _factory.CreateConnection();
 
             _createChannel = _connection.CreateModel();
@@ -59,12 +68,12 @@ namespace HogentVmPortal.RequestQueue.CtHandler
             _createChannel.QueueDeclare(queue: "ct_create_queue",
                 durable: true, exclusive: false, autoDelete: false, arguments: null);
             // Set the prefetch count to 1 for the create channel: proxmox only allows one copy per template at a time
-            _createChannel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+            _createChannel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false); //TODO: read prefetch from appsettings
 
             // Declare the remove channel
             _removeChannel.QueueDeclare(queue: "ct_remove_queue",
                 durable: true, exclusive: false, autoDelete: false, arguments: null);
-            // Set the prefetch count to 10 for the remove channel
+            // Set the prefetch count to 5 for the remove channel
             _removeChannel.BasicQos(prefetchSize: 0, prefetchCount: 5, global: false);
         }
 

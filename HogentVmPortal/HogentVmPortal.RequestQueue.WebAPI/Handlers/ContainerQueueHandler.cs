@@ -1,4 +1,6 @@
-﻿using HogentVmPortal.Shared.DTO;
+﻿using HogentVmPortal.Shared;
+using HogentVmPortal.Shared.DTO;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using System.Diagnostics;
@@ -10,16 +12,18 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Handlers
     public class ContainerQueueHandler
     {
         private readonly IConnectionFactory _factory;
+        private readonly RabbitMQConfig _rabbitMQConfig;
 
-        public ContainerQueueHandler()
+        public ContainerQueueHandler(IOptions<RabbitMQConfig> rabbitMQConfig)
         {
-            // TDOO: read from appsettings.json
+            _rabbitMQConfig = rabbitMQConfig.Value;
+
             _factory = new ConnectionFactory
             {
-                HostName = "192.168.152.142",
-                UserName = "serviceuser",
-                Password = "root0603",
-                Port = 5672,
+                HostName = _rabbitMQConfig.Uri,
+                Port = _rabbitMQConfig.Port,
+                UserName = _rabbitMQConfig.UserName,
+                Password = _rabbitMQConfig.Password,
             };
         }
 
@@ -99,7 +103,6 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Handlers
             {
                 Debug.WriteLine(ex.Message);
             }
-            //Exception voor serialize error
 
             return messageBody;
         }

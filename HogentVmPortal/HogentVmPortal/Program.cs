@@ -26,6 +26,7 @@ builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
 builder.Services.Configure<ProxmoxSshConfig>(builder.Configuration.GetSection("ProxmoxSshConfig"));
+builder.Services.Configure<WebApiConfig>(builder.Configuration.GetSection("WebApiConfig"));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

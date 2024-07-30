@@ -15,8 +15,8 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddScoped<IVirtualMachineRepository, VirtualMachineRepository>();
         services.AddScoped<IVirtualMachineTemplateRepository, VirtualMachineTemplateRepository>();
 
-        //services.Configure<ProxmoxSshConfig>(configuration.GetSection("ProxmoxSshConfig"));
         services.Configure<ProxmoxConfig>(configuration.GetSection("ProxmoxConfig"));
+        services.Configure<RabbitMQConfig>(configuration.GetSection("RabbitMQConfig"));
 
         services.AddHostedService<Worker>();
     })

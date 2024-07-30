@@ -42,6 +42,7 @@ namespace HogentVmPortal.Controllers
             {
                 ModelState.AddModelError("Name", $"{templateViewModel.Name} is taken");
             }
+            //TODO: check here for proxmoxId exists for containers and for vm's!
             if(_templateRepository.ProxmoxIdExists(templateViewModel.ProxmoxId))
             {
                 ModelState.AddModelError("ProxmoxId", $"{templateViewModel.ProxmoxId} is taken");

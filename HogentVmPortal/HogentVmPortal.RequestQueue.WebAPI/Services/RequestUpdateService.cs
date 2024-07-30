@@ -1,11 +1,12 @@
-﻿using HogentVmPortal.Shared.Repositories;
+﻿using HogentVmPortal.Shared;
+using HogentVmPortal.Shared.Repositories;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Diagnostics;
 using System.Text;
 
-//TODO: move this to separate project
 namespace HogentVmPortal.RequestQueue.WebAPI.Services
 {
     public class RequestUpdateService : BackgroundService
@@ -15,13 +16,25 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Services
 
         private readonly IRequestRepository _requestRepository;
 
-        public RequestUpdateService(IServiceProvider serviceProvider)
+        private readonly RabbitMQConfig _rabbitMQConfig;
+
+        public RequestUpdateService(IServiceProvider serviceProvider, IOptions<RabbitMQConfig> rabbitMQConfig)
         {
             var scope = serviceProvider.CreateScope();
             var services = scope.ServiceProvider;
             _requestRepository = services.GetRequiredService<IRequestRepository>();
 
-            var factory = new ConnectionFactory() { HostName = "192.168.152.142", UserName = "serviceuser", Password = "root0603", Port = 5672 };
+            _rabbitMQConfig = rabbitMQConfig.Value;
+
+            var factory = new ConnectionFactory
+            {
+                HostName = _rabbitMQConfig.Uri,
+                Port = _rabbitMQConfig.Port,
+                UserName = _rabbitMQConfig.UserName,
+                Password = _rabbitMQConfig.Password,
+            };
+
+            //var factory = new ConnectionFactory() { HostName = "192.168.152.142", UserName = "serviceuser", Password = "root0603", Port = 5672 };
             _connection = factory.CreateConnection();
 
             _requestUpdateChannel = _connection.CreateModel();
@@ -42,7 +55,6 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Services
                 var body = ea.Body.ToArray();
                 var jsonMessage = Encoding.UTF8.GetString(body);
 
-                //var updateRequest = JsonConvert.DeserializeObject<Request>(jsonMessage);
                 var updateRequest = JsonConvert.DeserializeObject<dynamic>(jsonMessage);
 
                 if (updateRequest != null)
@@ -57,7 +69,6 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Services
                         await _requestRepository.Update(request);
                     }
                 }
-                //if (updateRequest != null) await _requestRepository.Update(updateRequest);
 
                 _requestUpdateChannel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 
