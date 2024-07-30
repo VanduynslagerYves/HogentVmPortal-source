@@ -6,11 +6,15 @@ using HogentVmPortal.Shared;
 using HogentVmPortal.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DbContextConnection") ?? throw new InvalidOperationException("Connection string 'DbContextConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlServer(connectionString, optionsBuilder => optionsBuilder.MigrationsAssembly("HogentVmPortal"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DbContextConnection"), optionsBuilder => optionsBuilder.MigrationsAssembly("HogentVmPortal"));
+});
+
+builder.Services.AddDbContext<RequestDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("RequestDbContextConnection"), optionsBuilder => optionsBuilder.MigrationsAssembly("HogentVmPortal"));
 });
 
 builder.Services.AddDefaultIdentity<HogentUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
@@ -29,6 +33,7 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddTransient<VirtualMachineApiService>();
 builder.Services.AddTransient<ContainerApiService>();
+builder.Services.AddTransient<ValidateApiService>();
 
 var app = builder.Build();
 

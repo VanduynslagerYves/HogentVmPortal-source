@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HogentVmPortal.RequestQueue.Shared\HogentVmPortal.RequestQueue.Shared.csproj" />
     <ProjectReference Include="..\HogentVmPortal.Shared\HogentVmPortal.Shared.csproj" />
   </ItemGroup>
 </Project>

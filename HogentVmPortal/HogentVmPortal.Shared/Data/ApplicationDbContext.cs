@@ -1,5 +1,4 @@
-﻿using HogentVmPortal.Shared.DTO;
-using HogentVmPortal.Shared.Model;
+﻿using HogentVmPortal.Shared.Model;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

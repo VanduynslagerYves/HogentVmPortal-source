@@ -14,22 +14,6 @@ namespace HogentVmPortal.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<bool> Validate(ContainerCreateRequest request)
-        {
-            var httpClient = _httpClientFactory.CreateClient();
-            var jsonContent = JsonConvert.SerializeObject(request, Formatting.Indented);
-            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-            //TODO: get the correct url from appsettings
-            var response = await httpClient.PostAsync("https://localhost:7296/api/container/validate", content);
-
-            response.EnsureSuccessStatusCode();
-            var jsonSuccessResponse = await response.Content.ReadAsStringAsync();
-            var isValid = JsonConvert.DeserializeObject<bool>(jsonSuccessResponse);
-
-            return isValid;
-        }
-
         public async Task<string> CreateContainerAsync(ContainerCreateRequest request)
         {
             var httpClient = _httpClientFactory.CreateClient();

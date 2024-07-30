@@ -1,0 +1,4 @@
+Add-Migration InitialCreate -Context FirstDbContext
+Add-Migration InitialCreate -Context SecondDbContext
+Update-Database -Context FirstDbContext
+Update-Database -Context SecondDbContext

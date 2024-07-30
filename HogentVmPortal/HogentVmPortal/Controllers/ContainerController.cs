@@ -22,6 +22,7 @@ namespace HogentVmPortal.Controllers
         private readonly IAppUserRepository _appUserRepository;
 
         private readonly ContainerApiService _ctApiService;
+        private readonly ValidateApiService _validateApiService;
 
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
@@ -30,7 +31,8 @@ namespace HogentVmPortal.Controllers
             IAppUserRepository appUserRepository,
             ICourseRepository courseRepository,
             IOptions<ProxmoxSshConfig> sshConfig,
-            ContainerApiService ctApiService)
+            ContainerApiService ctApiService,
+            ValidateApiService validateApiService)
         {
             _logger = logger;
 
@@ -41,6 +43,7 @@ namespace HogentVmPortal.Controllers
             _proxmoxSshConfig = sshConfig.Value;
 
             _ctApiService = ctApiService;
+            _validateApiService = validateApiService;
         }
 
         // GET: Container
@@ -96,7 +99,7 @@ namespace HogentVmPortal.Controllers
                 CloneId = containerViewModel.CloneId,
             };
 
-            var isValid = await _ctApiService.Validate(createRequest);
+            var isValid = await _validateApiService.ValidateName(createRequest.Name);
             if (!isValid)
             {
                 ModelState.AddModelError("Name", $"{containerViewModel.Name} is taken");
@@ -167,6 +170,7 @@ namespace HogentVmPortal.Controllers
                     TimeStamp = DateTime.UtcNow,
                     Name = container.Name,
                     VmId = container.Id,
+                    OwnerId = User.GetId(),
                 };
 
                 //call API

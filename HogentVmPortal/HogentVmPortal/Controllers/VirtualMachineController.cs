@@ -22,6 +22,7 @@ namespace HogentVmPortal.Controllers
         private readonly IAppUserRepository _appUserRepository;
 
         private readonly VirtualMachineApiService _vmApiService;
+        private readonly ValidateApiService _validateApiService;
 
         private readonly ProxmoxSshConfig _proxmoxSshConfig;
 
@@ -30,7 +31,8 @@ namespace HogentVmPortal.Controllers
             IAppUserRepository appUserRepository,
             ICourseRepository courseRepository,
             IOptions<ProxmoxSshConfig> sshConfig,
-            VirtualMachineApiService vmApiService)
+            VirtualMachineApiService vmApiService,
+            ValidateApiService validateApiService)
         {
             _logger = logger;
 
@@ -41,6 +43,7 @@ namespace HogentVmPortal.Controllers
             _proxmoxSshConfig = sshConfig.Value;
 
             _vmApiService = vmApiService;
+            _validateApiService = validateApiService;
         }
 
         // GET: VirtualMachine
@@ -102,7 +105,7 @@ namespace HogentVmPortal.Controllers
                 SshKey = virtualMachineViewModel.SshKey,
             };
 
-            var isValid = await _vmApiService.Validate(createRequest);
+            var isValid = await _validateApiService.ValidateName(createRequest.Name);
             if (!isValid)
             {
                 ModelState.AddModelError("Name", $"{virtualMachineViewModel.Name} is taken");
@@ -173,6 +176,7 @@ namespace HogentVmPortal.Controllers
                     TimeStamp = DateTime.UtcNow,
                     Name = virtualMachine.Name,
                     VmId = virtualMachine.Id,
+                    OwnerId = User.GetId(),
                 };
 
                 //call API

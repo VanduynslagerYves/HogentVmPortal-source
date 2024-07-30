@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Pulumi.Automation;
+using RabbitMQ.Client.Exceptions;
 
 namespace HogentVmPortal.RequestQueue.VmHandler
 {
@@ -26,6 +27,8 @@ namespace HogentVmPortal.RequestQueue.VmHandler
 
         private readonly IOptions<ProxmoxConfig> _proxmoxConfig;
 
+        private readonly ConnectionFactory _factory;
+
         public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IOptions<ProxmoxConfig> proxmoxConfig)
         {
             _logger = logger;
@@ -39,8 +42,8 @@ namespace HogentVmPortal.RequestQueue.VmHandler
             _proxmoxConfig = proxmoxConfig;
 
             //TODO: read connection settings from appsettings
-            var factory = new ConnectionFactory() { HostName = "192.168.152.142", UserName = "serviceuser", Password = "root0603", Port = 5672 };
-            _connection = factory.CreateConnection();
+            _factory = new ConnectionFactory() { HostName = "192.168.152.142", UserName = "serviceuser", Password = "root0603", Port = 5672 };
+            _connection = _factory.CreateConnection();
 
             _createChannel = _connection.CreateModel();
             _removeChannel = _connection.CreateModel();
@@ -49,7 +52,7 @@ namespace HogentVmPortal.RequestQueue.VmHandler
             _createChannel.QueueDeclare(queue: "vm_create_queue",
                 durable: true, exclusive: false, autoDelete: false, arguments: null);
             // Set the prefetch count to 2 for the create channel
-            _createChannel.BasicQos(prefetchSize: 0, prefetchCount: 2, global: false);
+            _createChannel.BasicQos(prefetchSize: 0, prefetchCount: 2, global: false); //TODO: read prefetch counts from appsettings
 
             // Declare the remove channel
             _removeChannel.QueueDeclare(queue: "vm_remove_queue",
@@ -139,6 +142,8 @@ namespace HogentVmPortal.RequestQueue.VmHandler
                 };
 
                 await _virtualMachineRepository.Add(virtualMachine);
+
+                EnqueueUpdateRequest(createRequest.Id, Status.Complete, DateTime.UtcNow);
             }
             catch (Exception e)
             {
@@ -169,6 +174,8 @@ namespace HogentVmPortal.RequestQueue.VmHandler
                 await stack.Workspace.RemoveStackAsync(removeRequest.Name); //use workspace property to remove the now empty stack
 
                 await _virtualMachineRepository.Delete(removeRequest.VmId);
+
+                EnqueueUpdateRequest(removeRequest.Id, Status.Complete, DateTime.UtcNow);
             }
             catch (Exception e)
             {
@@ -179,6 +186,58 @@ namespace HogentVmPortal.RequestQueue.VmHandler
         private static T? GetValue<T>(UpResult? result, string key, Func<object, T> convertFunc)
         {
             return result != null && result.Outputs.TryGetValue(key, out var outputValue) ? convertFunc(outputValue.Value) : default;
+        }
+
+        //TODO: move this method to a separate class (copypasta: see also in Worker.cs from CtHandler)
+        private void EnqueueUpdateRequest(Guid id, Status status, DateTime timestamp)
+        {
+            try
+            {
+                using (var connection = _factory.CreateConnection())
+                using (var channel = connection.CreateModel())
+                {
+                    var messageData = GetMessageData(new { Id = id, Status = status, TimeStamp = timestamp });
+
+                    if (messageData != null)
+                    {
+                        // Declare a queue (if it doesn't already exist)
+                        channel.QueueDeclare(queue: "request_update_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+                        // Publish the message to the queue
+                        channel.BasicPublish(exchange: "", routingKey: "request_update_queue", basicProperties: null, body: messageData);
+                    }
+                }
+            }
+            catch (BrokerUnreachableException ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+
+        }
+
+        private byte[]? GetMessageData(object data)
+        {
+            byte[]? messageBody = null;
+
+            try
+            {
+                //Parse the data to json, to byte[]
+                var jsonMessage = JsonSerializer.Serialize(data);
+                messageBody = Encoding.UTF8.GetBytes(jsonMessage);
+
+                return messageBody;
+            }
+            catch (Exception ex) //CustomException hier op basis van exceptions bij ophalen data
+            {
+                Debug.WriteLine(ex.Message);
+            }
+            //Exception voor serialize error
+
+            return messageBody;
         }
 
         public override void Dispose()

@@ -3,6 +3,7 @@ using HogentVmPortal.Shared.Repositories;
 using HogentVmPortal.RequestQueue.WebAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
+using HogentVmPortal.Shared.Model;
 
 namespace HogentVmPortal.RequestQueue.WebAPI.Controllers
 {
@@ -14,18 +15,19 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Controllers
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
         private readonly IContainerRepository _ctRepository;
+        private readonly IRequestRepository _requestRepository;
 
-        private static ConcurrentDictionary<string, string> _taskStatuses = new ConcurrentDictionary<string, string>();
-
-        public ContainerController(ILogger<ContainerController> logger, IServiceScopeFactory serviceScopeFactory, IContainerRepository ctRepository)
+        public ContainerController(ILogger<ContainerController> logger, IServiceScopeFactory serviceScopeFactory, IContainerRepository ctRepository, IRequestRepository requestRepository)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
+
             _ctRepository = ctRepository;
+            _requestRepository = requestRepository;
         }
 
         [HttpPost("validate")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status202Accepted)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         public async Task<IActionResult> Validate(ContainerCreateRequest request)
         {
             if (request == null) return BadRequest("Invalid request data");
@@ -39,18 +41,30 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Controllers
 
         [HttpPost("create")]
         [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
-        public IActionResult Create(ContainerCreateRequest request)
+        public IActionResult Create(ContainerCreateRequest createRequest)
         {
-            if (request == null) return BadRequest("Invalid request data");
+            if (createRequest == null) return BadRequest("Invalid request data");
 
             var taskId = Guid.NewGuid().ToString();
 
+            var request = new Request
+            {
+                Id = createRequest.Id,
+                TimeStamp = createRequest.TimeStamp,
+                Name = createRequest.Name,
+                RequesterId = createRequest.OwnerId,
+                Type = InfraType.Container,
+                Status = Status.Pending,
+                RequestType = RequestType.Create,
+            };
+
+            _requestRepository.Add(request);
             //TODO: save request here in db with taskId and status pending 0
 
             using (var scope = _serviceScopeFactory.CreateAsyncScope())
             {
                 var handler = scope.ServiceProvider.GetRequiredService<ContainerQueueHandler>();
-                handler.EnqueueCreateRequest(request);
+                handler.EnqueueCreateRequest(createRequest);
                 //await handler.HandleContainerCreateRequest(request);
             }
 
@@ -65,16 +79,29 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Controllers
 
         [HttpPost("delete")]
         [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status202Accepted)]
-        public IActionResult Delete(ContainerRemoveRequest request)
+        public IActionResult Delete(ContainerRemoveRequest removeRequest)
         {
-            if (request == null) return BadRequest("Invalid request data");
+            if (removeRequest == null) return BadRequest("Invalid request data");
 
             var taskId = Guid.NewGuid().ToString();
+
+            var request = new Request
+            {
+                Id = removeRequest.Id,
+                TimeStamp = removeRequest.TimeStamp,
+                Name = removeRequest.Name,
+                RequesterId = removeRequest.OwnerId,
+                Type = InfraType.Container,
+                Status = Status.Pending,
+                RequestType = RequestType.Remove,
+            };
+
+            _requestRepository.Add(request);
 
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var handler = scope.ServiceProvider.GetRequiredService<ContainerQueueHandler>();
-                handler.EnqueueRemoveRequest(request);
+                handler.EnqueueRemoveRequest(removeRequest);
             }
 
             //Task.Run(async () =>
@@ -112,67 +139,5 @@ namespace HogentVmPortal.RequestQueue.WebAPI.Controllers
 
             return NotFound(id);
         }
-
-        [HttpGet("status/{taskId}")]
-        [ProducesResponseType(typeof(StatusResponse), StatusCodes.Status200OK)]
-        public IActionResult GetStatus(string taskId)
-        {
-            if (_taskStatuses.TryGetValue(taskId, out var status))
-            {
-                return Ok(new StatusResponse { TaskId = taskId, Status = status });
-            }
-
-            return NotFound(new StatusResponse { TaskId = taskId, Status = "Not Found" });
-        }
-
-        //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
-        //private async Task ProcessCreateRequestAsync(ContainerCreateRequest request, string taskId)
-        //{
-        //    try
-        //    {
-        //        //TODO: update request here in db with the taskId and updated status
-        //        _taskStatuses[taskId] = "Processing";
-        //        _logger.LogInformation("Processing task {taskId}", taskId);
-
-        //        using (var scope = _serviceScopeFactory.CreateScope())
-        //        {
-        //            var handler = scope.ServiceProvider.GetRequiredService<ContainerQueueHandler>();
-        //            handler.EnqueueCreateRequest(request);
-        //            //await handler.HandleContainerCreateRequest(request);
-        //        }
-
-        //        _taskStatuses[taskId] = "Completed";
-        //        _logger.LogInformation("Completed task {taskId}", taskId);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        _taskStatuses[taskId] = "Failed";
-        //        _logger.LogError("Failed task {taskId}", taskId);
-        //    }
-        //}
-
-        //This task will be executed in a background thread: we need to create a new scope for the task, so dependencies for the task can be correctly resolved with DI
-        //private async Task ProcessRemoveRequestAsync(ContainerRemoveRequest request, string taskId)
-        //{
-        //    try
-        //    {
-        //        _taskStatuses[taskId] = "Processing";
-        //        _logger.LogInformation("Processing task {taskId}", taskId);
-
-        //        using (var scope = _serviceScopeFactory.CreateScope())
-        //        {
-        //            var handler = scope.ServiceProvider.GetRequiredService<ContainerQueueHandler>();
-        //            await handler.HandleContainerRemoveRequest(request);
-        //        }
-
-        //        _taskStatuses[taskId] = "Completed";
-        //        _logger.LogInformation("Completed task {taskId}", taskId);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        _taskStatuses[taskId] = "Failed";
-        //        _logger.LogError("Failed task {taskId}", taskId);
-        //    }
-        //}
     }
 }

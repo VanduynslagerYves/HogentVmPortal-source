@@ -3,16 +3,21 @@ using HogentVmPortal.Shared.Data;
 using HogentVmPortal.Shared.Repositories;
 using HogentVmPortal.RequestQueue.WebAPI.Handlers;
 using Microsoft.EntityFrameworkCore;
+using HogentVmPortal.RequestQueue.WebAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DbContextConnection")));
 
+builder.Services.AddDbContext<RequestDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("RequestDbContextConnection")));
+
 builder.Services.AddControllers();
 
 //builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 //builder.Services.AddHostedService<QueuedHostedService>();
+builder.Services.AddHostedService<RequestUpdateService>();
 
 // SSH Config
 builder.Services.Configure<ProxmoxSshConfig>(builder.Configuration.GetSection("ProxmoxSshConfig"));
@@ -36,10 +41,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<IVirtualMachineRepository, VirtualMachineRepository>();
 builder.Services.AddScoped<IContainerRepository, ContainerRepository>();
-//builder.Services.AddScoped<IVirtualMachineTemplateRepository, VirtualMachineTemplateRepository>();
-//builder.Services.AddScoped<IContainerTemplateRepository, ContainerTemplateRepository>();
-
-//builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
+builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 
 builder.Services.AddScoped<VirtualMachineQueueHandler>();
 builder.Services.AddScoped<ContainerQueueHandler>();

@@ -14,22 +14,6 @@ namespace HogentVmPortal.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<bool> Validate(VirtualMachineCreateRequest request)
-        {
-            var httpClient = _httpClientFactory.CreateClient();
-            var jsonContent = JsonConvert.SerializeObject(request, Formatting.Indented);
-            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-            //TODO: get the correct url from appsettings
-            var response = await httpClient.PostAsync("https://localhost:7296/api/virtualmachine/validate", content);
-
-            response.EnsureSuccessStatusCode();
-            var jsonSuccessResponse = await response.Content.ReadAsStringAsync();
-            var isValid = JsonConvert.DeserializeObject<bool>(jsonSuccessResponse);
-
-            return isValid;
-        }
-
         //TODO: save the request as a virtualmachine and status.
         // validate request: check vm's for existing name
         public async Task<string> CreateVmAsync(VirtualMachineCreateRequest request)
