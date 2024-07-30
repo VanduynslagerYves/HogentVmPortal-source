@@ -2,7 +2,7 @@
 {
     public class VirtualMachineCreateRequest
     {
-        public Guid Id { get; set; }
+        public required Guid Id { get; set; }
         public required DateTime TimeStamp { get; set; }
         public required string Name { get; set; }
         public required string OwnerId { get; set; }

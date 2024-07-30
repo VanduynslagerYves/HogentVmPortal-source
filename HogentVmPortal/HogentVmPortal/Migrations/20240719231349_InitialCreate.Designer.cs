@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HogentVmPortal.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240523134520_Init")]
-    partial class Init
+    [Migration("20240719231349_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -70,110 +70,6 @@ namespace HogentVmPortal.Migrations
                     b.ToTable("CourseVirtualMachineTemplate");
                 });
 
-            modelBuilder.Entity("HogentVmPortal.Shared.DTO.ContainerCreateRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CloneId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ContainerCreateRequest", (string)null);
-                });
-
-            modelBuilder.Entity("HogentVmPortal.Shared.DTO.ContainerRemoveRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("VmId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ContainerRemoveRequest", (string)null);
-                });
-
-            modelBuilder.Entity("HogentVmPortal.Shared.DTO.VirtualMachineCreateRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CloneId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Login")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SshKey")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("VirtualMachineCreateRequest", (string)null);
-                });
-
-            modelBuilder.Entity("HogentVmPortal.Shared.DTO.VirtualMachineRemoveRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("VmId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("VirtualMachineRemoveRequest", (string)null);
-                });
-
             modelBuilder.Entity("HogentVmPortal.Shared.Model.Container", b =>
                 {
                     b.Property<Guid>("Id")
@@ -192,8 +88,7 @@ namespace HogentVmPortal.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("ProxmoxId")
-                        .IsRequired()
+                    b.Property<int>("ProxmoxId")
                         .HasColumnType("int");
 
                     b.Property<Guid>("TemplateId")
@@ -337,8 +232,7 @@ namespace HogentVmPortal.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("ProxmoxId")
-                        .IsRequired()
+                    b.Property<int>("ProxmoxId")
                         .HasColumnType("int");
 
                     b.Property<Guid>("TemplateId")

@@ -85,8 +85,7 @@ namespace HogentVmPortal.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("ProxmoxId")
-                        .IsRequired()
+                    b.Property<int>("ProxmoxId")
                         .HasColumnType("int");
 
                     b.Property<Guid>("TemplateId")
@@ -230,8 +229,7 @@ namespace HogentVmPortal.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("ProxmoxId")
-                        .IsRequired()
+                    b.Property<int>("ProxmoxId")
                         .HasColumnType("int");
 
                     b.Property<Guid>("TemplateId")

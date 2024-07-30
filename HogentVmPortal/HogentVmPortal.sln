@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HogentVmPortal.RequestQueue
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HogentVmPortal.RequestQueue.VmHandler", "HogentVmPortal.RequestQueue.VmHandler\HogentVmPortal.RequestQueue.VmHandler.csproj", "{0FBA3D3D-DC22-4DDD-803E-9E303F9C95E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HogentVmPortal.RequestQueue.CtHandler", "HogentVmPortal.RequestQueue.CtHandler\HogentVmPortal.RequestQueue.CtHandler.csproj", "{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HogentVmPortal.RequestQueue.CtHandler", "HogentVmPortal.RequestQueue.CtHandler\HogentVmPortal.RequestQueue.CtHandler.csproj", "{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HogentVmPortal.RequestQueue.Shared", "HogentVmPortal.RequestQueue.Shared\HogentVmPortal.RequestQueue.Shared.csproj", "{FBC28E21-2BD5-40BF-B654-FC01C378759E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16FEB8F3-A503-47B5-B65D-E600AEAF7B24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBC28E21-2BD5-40BF-B654-FC01C378759E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBC28E21-2BD5-40BF-B654-FC01C378759E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBC28E21-2BD5-40BF-B654-FC01C378759E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBC28E21-2BD5-40BF-B654-FC01C378759E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
