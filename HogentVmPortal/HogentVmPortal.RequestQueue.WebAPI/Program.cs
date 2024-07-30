@@ -19,9 +19,8 @@ builder.Services.AddControllers();
 //builder.Services.AddHostedService<QueuedHostedService>();
 builder.Services.AddHostedService<RequestUpdateService>();
 
-// SSH Config
-builder.Services.Configure<ProxmoxSshConfig>(builder.Configuration.GetSection("ProxmoxSshConfig"));
-builder.Services.Configure<ProxmoxConfig>(builder.Configuration.GetSection("ProxmoxConfig"));
+// RabbitMQ Config
+builder.Services.Configure<RabbitMQConfig>(builder.Configuration.GetSection("RabbitMQConfig"));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

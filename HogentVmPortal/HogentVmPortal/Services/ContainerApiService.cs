@@ -1,5 +1,7 @@
-﻿using HogentVmPortal.Shared.DTO;
+﻿using HogentVmPortal.Shared;
+using HogentVmPortal.Shared.DTO;
 using HogentVmPortal.Shared.Model;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -8,10 +10,13 @@ namespace HogentVmPortal.Services
     public class ContainerApiService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _apiUrl;
 
-        public ContainerApiService(IHttpClientFactory httpClientFactory)
+        public ContainerApiService(IHttpClientFactory httpClientFactory, IOptions<WebApiConfig> webApiConfigOptions)
         {
             _httpClientFactory = httpClientFactory;
+            var webApiConfig = webApiConfigOptions.Value;
+            _apiUrl = webApiConfig.Uri;
         }
 
         public async Task<string> CreateContainerAsync(ContainerCreateRequest request)
@@ -20,7 +25,7 @@ namespace HogentVmPortal.Services
             var jsonContent = JsonConvert.SerializeObject(request, Formatting.Indented);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            var response = await httpClient.PostAsync("https://localhost:7296/api/container/create", content);
+            var response = await httpClient.PostAsync($"{_apiUrl}/container/create", content);
 
             response.EnsureSuccessStatusCode();
             var jsonSuccessResponse = await response.Content.ReadAsStringAsync();
@@ -34,8 +39,7 @@ namespace HogentVmPortal.Services
             var jsonContent = JsonConvert.SerializeObject(request, Formatting.Indented);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            //TODO: get the correct url from appsettings
-            var response = await httpClient.PostAsync("https://localhost:7296/api/container/delete", content);
+            var response = await httpClient.PostAsync($"{_apiUrl}/container/delete", content);
 
             response.EnsureSuccessStatusCode();
             var jsonSuccessResponse = await response.Content.ReadAsStringAsync();
@@ -47,7 +51,7 @@ namespace HogentVmPortal.Services
         {
             var httpClient = _httpClientFactory.CreateClient();
 
-            var response = await httpClient.GetAsync($"https://localhost:7296/api/container/all?includeUsers={includeUsers}");
+            var response = await httpClient.GetAsync($"{_apiUrl}/container/all?includeUsers={includeUsers}");
             response.EnsureSuccessStatusCode();
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
@@ -60,7 +64,7 @@ namespace HogentVmPortal.Services
         {
             var httpClient = _httpClientFactory.CreateClient();
 
-            var response = await httpClient.GetAsync($"https://localhost:7296/api/container/id?id={id}&includeUsers={includeUsers}");
+            var response = await httpClient.GetAsync($"{_apiUrl}/container/id?id={id}&includeUsers={includeUsers}");
             response.EnsureSuccessStatusCode();
 
             var jsonResponse = await response.Content.ReadAsStringAsync();

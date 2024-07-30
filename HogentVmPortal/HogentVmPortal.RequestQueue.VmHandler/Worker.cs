@@ -25,11 +25,11 @@ namespace HogentVmPortal.RequestQueue.VmHandler
         private readonly IVirtualMachineTemplateRepository _virtualMachineTemplateRepository;
         private readonly IAppUserRepository _appUserRepository;
 
-        private readonly IOptions<ProxmoxConfig> _proxmoxConfig;
+        private readonly ProxmoxConfig _proxmoxConfig;
 
         private readonly ConnectionFactory _factory;
 
-        public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IOptions<ProxmoxConfig> proxmoxConfig)
+        public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IOptions<ProxmoxConfig> proxmoxConfig, IOptions<RabbitMQConfig> rabbitMQConfigOptions)
         {
             _logger = logger;
             var scope = serviceProvider.CreateScope();
@@ -39,10 +39,17 @@ namespace HogentVmPortal.RequestQueue.VmHandler
             _virtualMachineRepository = services.GetRequiredService<IVirtualMachineRepository>();
             _virtualMachineTemplateRepository = services.GetRequiredService<IVirtualMachineTemplateRepository>();
 
-            _proxmoxConfig = proxmoxConfig;
+            _proxmoxConfig = proxmoxConfig.Value;
+            var rabbitMQConfig = rabbitMQConfigOptions.Value;
 
-            //TODO: read connection settings from appsettings
-            _factory = new ConnectionFactory() { HostName = "192.168.152.142", UserName = "serviceuser", Password = "root0603", Port = 5672 };
+            _factory = new ConnectionFactory
+            {
+                HostName = rabbitMQConfig.Uri,
+                Port = rabbitMQConfig.Port,
+                UserName = rabbitMQConfig.UserName,
+                Password = rabbitMQConfig.Password,
+            };
+
             _connection = _factory.CreateConnection();
 
             _createChannel = _connection.CreateModel();
@@ -76,7 +83,6 @@ namespace HogentVmPortal.RequestQueue.VmHandler
                 _createChannel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 
                 Debug.WriteLine(jsonMessage);
-                //_logger.LogInformation(" [x] Received {message}", jsonMessage);
             };
 
             var removeConsumer = new EventingBasicConsumer(_removeChannel);
@@ -118,7 +124,7 @@ namespace HogentVmPortal.RequestQueue.VmHandler
 
                 var vmArgs = ProxmoxVirtualMachineCreateParams.FromViewModel(createRequest);
 
-                pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value); //TODO: init in base
+                pulumiProvider = new ProxmoxStrategy(_proxmoxConfig); //TODO: init in base
 
                 var projectName = "pulumi_inline";
                 var stackName = vmArgs.VmName;
@@ -161,7 +167,7 @@ namespace HogentVmPortal.RequestQueue.VmHandler
             {
                 var vmArgs = ProxmoxVirtualMachineDeleteParams.FromViewModel(removeRequest);
 
-                pulumiProvider = new ProxmoxStrategy(_proxmoxConfig.Value);
+                pulumiProvider = new ProxmoxStrategy(_proxmoxConfig);
 
                 var projectName = "pulumi_inline";
                 var stackName = vmArgs.VmName;

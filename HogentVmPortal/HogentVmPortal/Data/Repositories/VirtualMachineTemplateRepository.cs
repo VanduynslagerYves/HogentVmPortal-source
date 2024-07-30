@@ -82,7 +82,6 @@ namespace HogentVmPortal.Data.Repositories
 
         public bool ProxmoxIdExists(int id)
         {
-            //TODO: also check containers, and vm's. place this method in a seperate repository
             return _templates.Any(e => e.ProxmoxId == id);
         }
     }
